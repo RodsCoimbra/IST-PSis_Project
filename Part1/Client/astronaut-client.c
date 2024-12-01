@@ -3,46 +3,36 @@
 int main()
 {
     remote_char_t m;
-    int disconnected = 0;
+    bool valid_action;
     void *context = zmq_ctx_new();
     void *requester = zmq_socket(context, ZMQ_REQ);
     zmq_connect(requester, TCP_PATH_REQ);
 
     m.action = Astronaut_connect;
 
-    if (zmq_send(requester, &m, sizeof(remote_char_t), 0) == -1)
-    {
-        perror("zmq_send");
-        exit(1);
-    }
+    send_msg(requester, &m);
 
-    if (zmq_recv(requester, &m, sizeof(remote_char_t), 0) == -1)
+    recv_msg(requester, &m);
+    if (m.ship == 0)
     {
-        perror("zmq_recv");
-        exit(1);
+        printf("Server is full\n");
+        return 0;
     }
 
     initialize_ncurses();
-
+    
+    m.action = Astronaut_movement;
     do
     {
-        disconnected = execute_action(&m);
-        if (disconnected != 'x')
+        valid_action = execute_action(&m);
+        if (valid_action)
         {
-            if (zmq_send(requester, &m, sizeof(remote_char_t), 0) == -1)
-            {
-                perror("zmq_send");
-                exit(1);
-            }
-            if (zmq_recv(requester, &m, sizeof(remote_char_t), 0) == -1)
-            {
-                perror("zmq_recv");
-                exit(1);
-            }
+            send_msg(requester, &m);
+            recv_msg(requester, &m);
             mvprintw(0, 0, "Ship %c with pontuation: %d", m.ship, m.points);
         }
         refresh(); /* Print it on to the real screen */
-    } while (disconnected != 1);
+    } while (m.action != Astronaut_disconnect);
 
     endwin(); /* End curses mode*/
     zmq_close(requester);
@@ -61,7 +51,7 @@ void initialize_ncurses()
     noecho();             /* Don't echo() while we do getch */
 }
 
-int execute_action(remote_char_t *m)
+bool execute_action(remote_char_t *m)
 {
     int key;
     key = getch();
@@ -85,11 +75,28 @@ int execute_action(remote_char_t *m)
     case KEY_q:
     case KEY_Q:
         m->action = Astronaut_disconnect;
-        return 1;
         break;
     default:
-        return 'x';
+        return 0;
         break;
     }
-    return 0;
+    return 1;
+}
+
+void send_msg(void *requester, remote_char_t *m)
+{
+    if (zmq_send(requester, m, sizeof(remote_char_t), 0) == -1)
+    {
+        perror("zmq_send");
+        exit(1);
+    }
+}
+
+void recv_msg(void *requester, remote_char_t *m)
+{
+    if (zmq_recv(requester, m, sizeof(remote_char_t), 0) == -1)
+    {
+        perror("zmq_recv");
+        exit(1);
+    }
 }

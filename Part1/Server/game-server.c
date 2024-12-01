@@ -2,121 +2,11 @@
 
 int main()
 {
-    WINDOW *space, *score_board;
-    ship_info_t ship_data[N_SHIPS];
-    alien_info_t alien_data[N_ALIENS];
+    void *context, *responder, *publisher;
+    initialize_connection(&context, &responder, &publisher);
 
-    int side_count[8] = {UP, DOWN, LEFT, RIGHT, UP, DOWN, LEFT, RIGHT};
-    int n_ships = 0;
+    run_game(responder, publisher);
 
-    void *context = zmq_ctx_new();
-
-    void *responder = zmq_socket(context, ZMQ_REP);
-    int rc = zmq_bind(responder, TCP_PATH_REP);
-
-    void *publisher = zmq_socket(context, ZMQ_PUB);
-    zmq_bind(publisher, TCP_PATH_PUB);
-
-    initialize_ncurses();
-
-    initialize_window(&space, &score_board);
-
-    int ship;
-    int pos_x;
-    int pos_y;
-
-    direction_t direction;
-
-    remote_char_t m;
-    while (1)
-    {
-        if (zmq_recv(responder, &m, sizeof(remote_char_t), 0) == -1)
-            exit(0);
-
-        if (m.action == Astronaut_connect) /* CONNECTION */
-        {
-            m.ship = find_new_ship(ship_data, n_ships);
-            m.action = Astronaut_movement;
-            m.points = 0;
-
-            ship_data[n_ships].side = side_count[n_ships];
-            random_position(&pos_x, &pos_y, ship_data[n_ships].side);
-            ship_data[n_ships].ship = m.ship;
-            ship_data[n_ships].pos_x = pos_x;
-            ship_data[n_ships].pos_y = pos_y;
-            ship_data[n_ships].points = 0;
-
-            n_ships++;
-
-            ship = m.ship;
-            pos_x = WINDOW_SIZE / 2;
-            pos_y = WINDOW_SIZE / 2;
-
-            zmq_send(responder, &m, sizeof(m), 0);
-        }
-        if (m.action == Astronaut_movement) /* MOVEMENT */
-        {
-            int ship_pos = find_ship_info(ship_data, n_ships, m.ship);
-            if (ship_pos != -1)
-            {
-                pos_x = ship_data[ship_pos].pos_x;
-                pos_y = ship_data[ship_pos].pos_y;
-                ship = ship_data[ship_pos].ship;
-                /*deletes old place */
-                wmove(space, pos_x, pos_y);
-                waddch(space, ' ');
-
-                /* claculates new direction */
-                direction = m.direction;
-
-                /* calculates new mark position */
-                new_position(&pos_x, &pos_y, direction, ship_data[ship_pos].side);
-                ship_data[ship_pos].pos_x = pos_x;
-                ship_data[ship_pos].pos_y = pos_y;
-
-                /* draw mark on new position */
-                wmove(space, pos_x, pos_y);
-                waddch(space, ship | A_BOLD);
-
-                wmove(score_board, ship_pos + 3, 3);
-                wprintw(score_board, "%c - %d", ship, m.points);
-
-                zmq_send(responder, &m, sizeof(m), 0);
-            }
-        }
-        if (m.action == Astronaut_zap) /* ZAP */
-        {
-        }
-        if (m.action == Astronaut_disconnect) /* DISCONNECTION */
-        {
-            int ship_pos = find_ship_info(ship_data, n_ships, m.ship);
-            if (ship_pos != -1)
-            {
-                pos_x = ship_data[ship_pos].pos_x;
-                pos_y = ship_data[ship_pos].pos_y;
-                ship = ship_data[ship_pos].ship;
-                /*deletes old place */
-                wmove(space, pos_x, pos_y);
-                waddch(space, ' ');
-
-                for (int i = ship_pos; i < n_ships - 1; i++)
-                {
-                    ship_data[i] = ship_data[i + 1];
-                }
-                n_ships--;
-            }
-            update_score_board(&score_board, ship_data, n_ships);
-            zmq_send(responder, &m, sizeof(m), 0);
-        }
-
-        zmq_send(publisher, "display\0", 8, ZMQ_SNDMORE);
-        zmq_send(publisher, &ship_data, sizeof(ship_info_t) * 100, 0);
-
-        wrefresh(space);
-        wrefresh(score_board);
-    }
-
-    endwin(); /* End curses mode*/
     zmq_close(responder);
     zmq_close(publisher);
     zmq_ctx_destroy(context);
@@ -124,130 +14,181 @@ int main()
     return 0;
 }
 
-void new_position(int *x, int *y, direction_t direction, direction_t side)
+void run_game(void *responder, void *publisher)
 {
-    switch (side)
+    WINDOW *space, *score_board;
+    pid_t pid;
+
+    initialize_ncurses();
+
+    initialize_window(&space, &score_board);
+
+    pid = fork();
+
+    if (pid < 0)
     {
-    case UP:
-        switch (direction)
-        {
-        case UP:
-            (*x)--;
-            if (*x == 0)
-                *x = 1;
-            break;
-        case DOWN:
-            (*x)++;
-            if (*x == 3)
-                *x = 2;
-            break;
-        case LEFT:
-            (*y)--;
-            if (*y == 2)
-                *y = 3;
-            break;
-        case RIGHT:
-            (*y)++;
-            if (*y == WINDOW_SIZE - 3)
-                *y = WINDOW_SIZE - 4;
-            break;
-        default:
-            break;
-        }
-        break;
-    case DOWN:
-        switch (direction)
-        {
-        case UP:
-            (*x)--;
-            if (*x == WINDOW_SIZE - 4)
-                *x = WINDOW_SIZE - 3;
-            break;
-        case DOWN:
-            (*x)++;
-            if (*x == WINDOW_SIZE - 1)
-                *x = WINDOW_SIZE - 2;
-            break;
-        case LEFT:
-            (*y)--;
-            if (*y == 2)
-                *y = 3;
-            break;
-        case RIGHT:
-            (*y)++;
-            if (*y == WINDOW_SIZE - 3)
-                *y = WINDOW_SIZE - 4;
-            break;
-        default:
-            break;
-        }
-        break;
-    case LEFT:
-        switch (direction)
-        {
-        case UP:
-            (*x)--;
-            if (*x == 2)
-                *x = 3;
-            break;
-        case DOWN:
-            (*x)++;
-            if (*x == WINDOW_SIZE - 3)
-                *x = WINDOW_SIZE - 4;
-            break;
-        case LEFT:
-            (*y)--;
-            if (*y == 0)
-                *y = 1;
-            break;
-        case RIGHT:
-            (*y)++;
-            if (*y == 3)
-                *y = 2;
-            break;
-        default:
-            break;
-        }
-        break;
-    case RIGHT:
-        switch (direction)
-        {
-        case UP:
-            (*x)--;
-            if (*x == 2)
-                *x = 3;
-            break;
-        case DOWN:
-            (*x)++;
-            if (*x == WINDOW_SIZE - 3)
-                *x = WINDOW_SIZE - 4;
-            break;
-        case LEFT:
-            (*y)--;
-            if (*y == WINDOW_SIZE - 4)
-                *y = WINDOW_SIZE - 3;
-            break;
-        case RIGHT:
-            (*y)++;
-            if (*y == WINDOW_SIZE - 1)
-                *y = WINDOW_SIZE - 2;
-            break;
-        default:
-            break;
-        }
+        perror("fork failed");
+        return;
+    }
+    if (pid == 0)
+    {
+        run_aliens(responder, publisher, space);
+    }
+    else
+    {
+        run_players(responder, publisher, space, score_board);
     }
 }
 
-int find_ship_info(ship_info_t ship_data[], int n_ships, int ship)
+void run_aliens(void *responder, void *publisher, WINDOW *space)
 {
-    for (int i = 0; i < n_ships; i++)
+    int a = 0;
+    position_info_t alien_data[N_ALIENS];
+    a++;
+    sleep(1);
+    //update_window_char(space, MID_POS + random() % 2 - 1, MID_POS + random() % 2 - 1, '*');
+}
+
+void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_board)
+{
+    ship_info_t ship_data[N_SHIPS] = {}, *current_ship = NULL;
+    
+    // TODO: MUDAR QUANDO SE mudar O SIZE ECRã
+    position_info_t spawn_points[] = {{1, MID_POS},
+                                      {WINDOW_SIZE - 2, MID_POS},
+                                      {MID_POS, 1},
+                                      {MID_POS, WINDOW_SIZE - 2},
+                                      {2, MID_POS},
+                                      {WINDOW_SIZE - 3, MID_POS},
+                                      {MID_POS, 2},
+                                      {MID_POS, WINDOW_SIZE - 3}};
+
+    remote_char_t m = {};
+    while (1)
     {
-        if (ship == ship_data[i].ship)
+        recv_msg(responder, &m);
+        switch (m.action)
         {
-            return i;
+        case Astronaut_connect:
+        {
+            int ship_idx = create_new_ship(ship_data);
+            if (ship_idx == -1)
+            {
+                m.ship = 0;
+                send_msg(responder, &m);
+                break;
+            }
+            m.ship = 'A' + ship_idx;
+            m.points = 0;
+            current_ship = &ship_data[ship_idx];
+
+            initialize_ship(current_ship, spawn_points[ship_idx], m.ship);
+
+            update_window_char(space, current_ship->pos_x, current_ship->pos_y, m.ship | A_BOLD);
+
+            update_score_board(&score_board, ship_data);
+
+            send_msg(responder, &m);
         }
+        break;
+
+        case Astronaut_movement:
+        {
+            current_ship = find_ship_info(ship_data, m.ship);
+            if (current_ship == NULL)
+                break;
+
+            update_window_char(space, current_ship->pos_x, current_ship->pos_y, ' ');
+
+            new_position(current_ship, m.move_type);
+
+            update_window_char(space, current_ship->pos_x, current_ship->pos_y, current_ship->ship | A_BOLD);
+
+            send_msg(responder, &m);
+        }
+        break;
+
+        case Astronaut_zap:
+            break;
+
+        case Astronaut_disconnect:
+        {
+            current_ship = find_ship_info(ship_data, m.ship);
+            if (current_ship == NULL)
+                break;
+            // delete the ship from the screen
+            update_window_char(space, current_ship->pos_x, current_ship->pos_y, ' ');
+
+            current_ship->ship = 0;
+
+            // update the score board
+            update_score_board(&score_board, ship_data);
+
+            send_msg(responder, &m);
+        }
+        break;
+
+        default:
+            break;
+        }
+
+        publish_display_data(publisher, ship_data, "display");
+
+        wrefresh(space);
+        wrefresh(score_board);
     }
-    return -1;
+    endwin();
+}
+
+void initialize_connection(void **context, void **responder, void **publisher)
+{
+    *context = zmq_ctx_new();
+    // Responder
+    *responder = zmq_socket(*context, ZMQ_REP);
+    int rc = zmq_bind(*responder, TCP_PATH_REP);
+    assert(rc == 0);
+    // Publisher
+    *publisher = zmq_socket(*context, ZMQ_PUB);
+    rc = zmq_bind(*publisher, TCP_PATH_PUB);
+    assert(rc == 0);
+}
+
+void new_position(ship_info_t *current_ship, direction_t direction)
+{
+    int *y, *x;
+    switch (current_ship->move_type)
+    {
+    case HORIZONTAL:
+        y = &current_ship->pos_y;
+        if (direction == LEFT)
+            (*y)--;
+        else if (direction == RIGHT)
+            (*y)++;
+        clip_value(y, MIN_POS, MAX_POS);
+        break;
+
+    case VERTICAL:
+        x = &current_ship->pos_x;
+        if (direction == UP)
+            (*x)--;
+        else if (direction == DOWN)
+            (*x)++;
+        clip_value(x, MIN_POS, MAX_POS);
+        break;
+    }
+}
+
+ship_info_t *find_ship_info(ship_info_t ship_data[], int ship)
+{
+    int num_ship = ship - 'A';
+
+    if (num_ship < 0 || num_ship >= N_SHIPS)
+        return NULL;
+
+    if (ship_data[num_ship].ship == 0)
+        return NULL;
+
+    return &ship_data[num_ship];
 }
 
 void initialize_ncurses()
@@ -260,6 +201,7 @@ void initialize_ncurses()
 
 void initialize_window(WINDOW **space, WINDOW **score_board)
 {
+    // TODO: COLOCAR NUMEROS AO LADO DA JANELA
     *space = newwin(WINDOW_SIZE, WINDOW_SIZE, 0, 0);
     *score_board = newwin(WINDOW_SIZE, WINDOW_SIZE, 0, WINDOW_SIZE + 2);
     box(*space, 0, 0);
@@ -272,57 +214,90 @@ void initialize_window(WINDOW **space, WINDOW **score_board)
     wrefresh(*score_board);
 }
 
-char find_new_ship(ship_info_t ship_data[], int n_ships)
-{
-    char ship = 'A';
-    for (int i = 0; i < n_ships; i++)
-    {
-        if (ship == ship_data[i].ship)
-        {
-            ship++;
-        }
-    }
-    return ship;
-}
-
-void update_score_board(WINDOW **score_board, ship_info_t ship_data[], int n_ships)
+int create_new_ship(ship_info_t ship_data[])
 {
     for (int i = 0; i < N_SHIPS; i++)
     {
-        if (i < n_ships)
+        if (ship_data[i].ship == 0)
+            return i;
+    }
+
+    // No more ships available
+    return -1;
+}
+
+void update_score_board(WINDOW **score_board, ship_info_t ship_data[])
+{
+    int score_pos = 3;
+    for (int i = 0; i < N_SHIPS; i++)
+    {
+        ship_info_t current_ship = ship_data[i];
+        if (current_ship.ship != 0)
         {
-            wmove(*score_board, i + 3, 3);
-            wprintw(*score_board, "%c - %d", ship_data[i].ship, ship_data[i].points);
+            wmove(*score_board, score_pos, 3);
+            wprintw(*score_board, "%c - %d", current_ship.ship, current_ship.points);
+            score_pos++;
         }
-        else
-        {
-            wmove(*score_board, i + 3, 3);
-            wprintw(*score_board, "        ");
-        }
+    }
+
+    // Clear the last entry
+    wmove(*score_board, score_pos, 3);
+    wprintw(*score_board, "        ");
+}
+
+void initialize_ship(ship_info_t *ship_data, position_info_t spawn_point, char ship)
+{
+    ship_data->move_type = spawn_point.pos_x == MID_POS ? VERTICAL : HORIZONTAL;
+    ship_data->pos_x = spawn_point.pos_x;
+    ship_data->pos_y = spawn_point.pos_y;
+    // TODO: Mudar para position_info_t o ship_data_pos
+    ship_data->ship = ship;
+    ship_data->points = 0;
+}
+
+void clip_value(int *value, int min, int max)
+{
+    if (*value < min)
+        *value = min;
+
+    else if (*value > max)
+        *value = max;
+}
+
+void update_window_char(WINDOW *space, int x, int y, char c)
+{
+    wmove(space, x, y);
+    waddch(space, c);
+}
+
+void send_msg(void *responder, remote_char_t *m)
+{
+    if (zmq_send(responder, m, sizeof(remote_char_t), 0) == -1)
+    {
+        perror("zmq_send");
+        exit(1);
     }
 }
 
-void random_position(int *x, int *y, direction_t side)
+void recv_msg(void *responder, remote_char_t *m)
 {
-    switch (side)
+    if (zmq_recv(responder, m, sizeof(remote_char_t), 0) == -1)
     {
-    case UP:
-        *x = 1;
-        *y = random() % (WINDOW_SIZE - 2) + 1;
-        break;
-    case DOWN:
-        *x = WINDOW_SIZE - 2;
-        *y = random() % (WINDOW_SIZE - 2) + 1;
-        break;
-    case LEFT:
-        *x = random() % (WINDOW_SIZE - 2) + 1;
-        *y = 1;
-        break;
-    case RIGHT:
-        *x = random() % (WINDOW_SIZE - 2) + 1;
-        *y = WINDOW_SIZE - 2;
-        break;
-    default:
-        break;
+        perror("zmq_recv");
+        exit(1);
+    }
+}
+
+void publish_display_data(void *publisher, ship_info_t *ship_data, char *topic)
+{
+    if (zmq_send(publisher, topic, strlen(topic), ZMQ_SNDMORE) == -1)
+    {
+        perror("zmq_send");
+        exit(1);
+    }
+    if (zmq_send(publisher, ship_data, sizeof(ship_info_t) * N_SHIPS, 0) == -1)
+    {
+        perror("zmq_send");
+        exit(1);
     }
 }

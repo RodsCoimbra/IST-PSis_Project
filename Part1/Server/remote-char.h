@@ -1,3 +1,8 @@
+typedef enum movement_t
+{
+    VERTICAL,
+    HORIZONTAL
+} movement_t;
 
 typedef enum direction_t
 {
@@ -20,7 +25,7 @@ typedef struct remote_char_t
     char ship;
     int points;
     msg_type_t action;
-    direction_t direction;
+    movement_t move_type;
     /* data */
 } remote_char_t;
 

@@ -11,4 +11,8 @@
 
 void initialize_ncurses();
 
-int execute_action(remote_char_t *m);
+bool execute_action(remote_char_t *m);
+
+void send_msg(void *requester, remote_char_t *m);
+
+void recv_msg(void *requester, remote_char_t *m);
