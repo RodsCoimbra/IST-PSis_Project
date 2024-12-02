@@ -1,5 +1,5 @@
 #include <ncurses.h>
-#include "remote-char.h"
+#include "../remote-char.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -44,7 +44,7 @@ void initialize_connection(void **context, void **responder, void **publisher);
 
 void initialize_ship(ship_info_t *ship_data, position_info_t spawn_point, char ship);
 
-ship_info_t* find_ship_info(ship_info_t ship_data[], int ship);
+ship_info_t *find_ship_info(ship_info_t ship_data[], int ship);
 
 void initialize_ncurses();
 
@@ -53,6 +53,8 @@ void initialize_window(WINDOW **space, WINDOW **score_board);
 int create_new_ship(ship_info_t ship_data[]);
 
 void update_score_board(WINDOW **score_board, ship_info_t ship_data[]);
+
+void initialize_aliens(position_info_t alien_data[]);
 
 void new_position(ship_info_t *current_ship, direction_t direction);
 

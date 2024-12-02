@@ -42,17 +42,47 @@ void run_game(void *responder, void *publisher)
 
 void run_aliens(void *responder, void *publisher, WINDOW *space)
 {
-    int a = 0;
     position_info_t alien_data[N_ALIENS];
-    a++;
-    sleep(1);
-    //update_window_char(space, MID_POS + random() % 2 - 1, MID_POS + random() % 2 - 1, '*');
+
+    initialize_aliens(alien_data);
+
+    while (1)
+    {
+        alien_movement(alien_data);
+        sleep(1);
+        // update_window_char(space, MID_POS + random() % 2 - 1, MID_POS + random() % 2 - 1, '*');
+    }
+}
+
+void alien_movement(position_info_t alien_data[])
+{
+    for (int i = 0; i < N_ALIENS; i++)
+    {
+        int direction = random() % 4;
+        switch (direction)
+        {
+        case UP:
+            alien_data[i].pos_x--;
+            break;
+        case DOWN:
+            alien_data[i].pos_x++;
+            break;
+        case LEFT:
+            alien_data[i].pos_y--;
+            break;
+        case RIGHT:
+            alien_data[i].pos_y++;
+            break;
+        }
+        clip_value(&alien_data[i].pos_x, MAX_POS, MIN_POS);
+        clip_value(&alien_data[i].pos_y, MAX_POS, MIN_POS);
+    }
 }
 
 void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_board)
 {
     ship_info_t ship_data[N_SHIPS] = {}, *current_ship = NULL;
-    
+
     // TODO: MUDAR QUANDO SE mudar O SIZE ECRã
     position_info_t spawn_points[] = {{1, MID_POS},
                                       {WINDOW_SIZE - 2, MID_POS},
@@ -100,7 +130,7 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
 
             update_window_char(space, current_ship->pos_x, current_ship->pos_y, ' ');
 
-            new_position(current_ship, m.move_type);
+            new_position(current_ship, m.direction);
 
             update_window_char(space, current_ship->pos_x, current_ship->pos_y, current_ship->ship | A_BOLD);
 
@@ -109,7 +139,37 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
         break;
 
         case Astronaut_zap:
+        {
+            current_ship = find_ship_info(ship_data, m.ship);
+            if (current_ship == NULL)
+                break;
+
+            switch (current_ship->move_type)
+            {
+            case HORIZONTAL:
+            {
+                for (int i = 1; i < WINDOW_SIZE - 1; i++)
+                {
+                    update_window_char(space, i, current_ship->pos_y, '|');
+                }
+            }
             break;
+            case VERTICAL:
+            {
+                for (int i = 1; i < WINDOW_SIZE - 1; i++)
+                {
+                    update_window_char(space, current_ship->pos_x, i, '-');
+                }
+            }
+            break;
+            default:
+                break;
+            }
+            // TODO: IF ALIEN in the way, kill it and update score
+            send_msg(responder, &m);
+        }
+
+        break;
 
         case Astronaut_disconnect:
         {
@@ -151,6 +211,15 @@ void initialize_connection(void **context, void **responder, void **publisher)
     *publisher = zmq_socket(*context, ZMQ_PUB);
     rc = zmq_bind(*publisher, TCP_PATH_PUB);
     assert(rc == 0);
+}
+
+void initialize_aliens(position_info_t alien_data[])
+{
+    for (int i = 0; i < N_ALIENS; i++)
+    {
+        alien_data[i].pos_x = 3 + random() % (WINDOW_SIZE - 4);
+        alien_data[i].pos_y = 3 + random() % (WINDOW_SIZE - 4);
+    }
 }
 
 void new_position(ship_info_t *current_ship, direction_t direction)

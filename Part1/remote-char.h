@@ -25,7 +25,7 @@ typedef struct remote_char_t
     char ship;
     int points;
     msg_type_t action;
-    movement_t direction;
+    direction_t direction;
     /* data */
 } remote_char_t;
 

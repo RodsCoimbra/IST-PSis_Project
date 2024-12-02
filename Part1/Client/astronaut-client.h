@@ -1,5 +1,5 @@
 #include <ncurses.h>
-#include "remote-char.h"
+#include "../remote-char.h"
 #include <zmq.h>
 #include <unistd.h>
 #include <assert.h>
