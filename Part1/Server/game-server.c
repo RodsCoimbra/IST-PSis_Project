@@ -170,6 +170,8 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
                 for (int i = 1; i < WINDOW_SIZE - 1; i++)
                 {
                     zap_position.x = i;
+                    if (current_ship->position.x == zap_position.x)
+                        continue;
                     update_window_char(space, zap_position, '|');
                 }
                 for (int i = 0; i < N_ALIENS; i++)
@@ -182,7 +184,7 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
                 }
                 for (int i = 0; i < N_SHIPS; i++)
                 {
-                    if (ship_data[i].ship != 0 && ship_data[i].position.y == zap_position.y)
+                    if (ship_data[i].ship != 0 && ship_data[i].position.y == zap_position.y && ship_data[i].ship != current_ship->ship)
                     {
                         ship_data[i].timeouts[STUNNED] = current_time;
                     }
@@ -194,6 +196,8 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
                 for (int i = 1; i < WINDOW_SIZE - 1; i++)
                 {
                     zap_position.y = i;
+                    if (current_ship->position.y == zap_position.y)
+                        continue;
                     update_window_char(space, zap_position, '-');
                 }
                 for (int i = 0; i < N_ALIENS; i++)
@@ -206,7 +210,7 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
                 }
                 for (int i = 0; i < N_SHIPS; i++)
                 {
-                    if (ship_data[i].ship != 0 && ship_data[i].position.x == zap_position.x)
+                    if (ship_data[i].ship != 0 && ship_data[i].position.x == zap_position.x && ship_data[i].ship != current_ship->ship)
                     {
                         ship_data[i].timeouts[STUNNED] = current_time;
                     }

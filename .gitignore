@@ -1,3 +1,6 @@
 Part1/.vscode
 Part1/Server/.vscode
 Part1/Client/.vscode
+Part1/*.o
+Part1/game-server
+Part1/astronaut-client
