@@ -20,8 +20,6 @@ int main()
     }
 
     initialize_ncurses();
-
-    m.action = Astronaut_movement;
     do
     {
         valid_action = execute_action(&m);
@@ -59,15 +57,19 @@ int execute_action(remote_char_t *m)
     {
     case KEY_LEFT:
         m->direction = LEFT;
+        m->action = Astronaut_movement;
         break;
     case KEY_RIGHT:
         m->direction = RIGHT;
+        m->action = Astronaut_movement;
         break;
     case KEY_DOWN:
         m->direction = DOWN;
+        m->action = Astronaut_movement;
         break;
     case KEY_UP:
         m->direction = UP;
+        m->action = Astronaut_movement;
         break;
     case KEY_SPACE:
         m->action = Astronaut_zap;
