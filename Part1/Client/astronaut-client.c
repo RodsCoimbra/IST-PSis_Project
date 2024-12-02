@@ -3,7 +3,7 @@
 int main()
 {
     remote_char_t m;
-    bool valid_action;
+    int valid_action;
     void *context = zmq_ctx_new();
     void *requester = zmq_socket(context, ZMQ_REQ);
     zmq_connect(requester, TCP_PATH_REQ);
@@ -20,7 +20,7 @@ int main()
     }
 
     initialize_ncurses();
-    
+
     m.action = Astronaut_movement;
     do
     {
@@ -51,7 +51,7 @@ void initialize_ncurses()
     noecho();             /* Don't echo() while we do getch */
 }
 
-bool execute_action(remote_char_t *m)
+int execute_action(remote_char_t *m)
 {
     int key;
     key = getch();

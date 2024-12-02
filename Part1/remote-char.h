@@ -1,3 +1,6 @@
+#ifndef REMOTE_CHAR_H
+#define REMOTE_CHAR_H
+
 typedef enum movement_t
 {
     VERTICAL,
@@ -36,3 +39,5 @@ typedef struct remote_char_t
 #define KEY_SPACE 32
 #define KEY_q 113
 #define KEY_Q 81
+
+#endif

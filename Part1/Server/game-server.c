@@ -42,47 +42,61 @@ void run_game(void *responder, void *publisher)
 
 void run_aliens(void *responder, void *publisher, WINDOW *space)
 {
-    position_info_t alien_data[N_ALIENS];
+    int fd_read, fd_write;
+    alien_info_t alien_data[N_ALIENS];
+
+    // fd_write = write_FIFO(FIFO_LOCATION_CHILD_PARENT);
+
+    // fd_read = read_FIFO(FIFO_LOCATION_PARENT_CHILD);
 
     initialize_aliens(alien_data);
 
     while (1)
     {
         alien_movement(alien_data);
+
+        // write_msg(fd_write, alien_data);
+
+        // receive_msg(fd_read, alien_data);
+
         sleep(1);
-        // update_window_char(space, MID_POS + random() % 2 - 1, MID_POS + random() % 2 - 1, '*');
     }
 }
 
-void alien_movement(position_info_t alien_data[])
+void alien_movement(alien_info_t alien_data[])
 {
     for (int i = 0; i < N_ALIENS; i++)
     {
-        int direction = random() % 4;
-        switch (direction)
+        if (alien_data[i].alive)
         {
-        case UP:
-            alien_data[i].pos_x--;
-            break;
-        case DOWN:
-            alien_data[i].pos_x++;
-            break;
-        case LEFT:
-            alien_data[i].pos_y--;
-            break;
-        case RIGHT:
-            alien_data[i].pos_y++;
-            break;
+            direction_t direction = random() % 4;
+            switch (direction)
+            {
+            case UP:
+                alien_data[i].position.x--;
+                break;
+            case DOWN:
+                alien_data[i].position.x++;
+                break;
+            case LEFT:
+                alien_data[i].position.y--;
+                break;
+            case RIGHT:
+                alien_data[i].position.y++;
+                break;
+            }
+            clip_value(&alien_data[i].position.x, MAX_POS, MIN_POS);
+            clip_value(&alien_data[i].position.y, MAX_POS, MIN_POS);
         }
-        clip_value(&alien_data[i].pos_x, MAX_POS, MIN_POS);
-        clip_value(&alien_data[i].pos_y, MAX_POS, MIN_POS);
     }
 }
 
 void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_board)
 {
     ship_info_t ship_data[N_SHIPS] = {}, *current_ship = NULL;
-
+    alien_info_t alien_data[N_ALIENS];
+    time_t current_time;
+    int fd_read, fd_write;
     // TODO: MUDAR QUANDO SE mudar O SIZE ECRã
     position_info_t spawn_points[] = {{1, MID_POS},
                                       {WINDOW_SIZE - 2, MID_POS},
@@ -93,10 +107,15 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
                                       {MID_POS, 2},
                                       {MID_POS, WINDOW_SIZE - 3}};
 
+    // fd_read = read_FIFO(FIFO_LOCATION_CHILD_PARENT);
+    // fd_write = write_FIFO(FIFO_LOCATION_PARENT_CHILD);
     remote_char_t m = {};
     while (1)
     {
         recv_msg(responder, &m);
+
+        // receive_msg(fd_read, alien_data);
+
         switch (m.action)
         {
         case Astronaut_connect:
@@ -105,52 +124,68 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
             if (ship_idx == -1)
             {
                 m.ship = 0;
-                send_msg(responder, &m);
                 break;
             }
+
             m.ship = 'A' + ship_idx;
             m.points = 0;
             current_ship = &ship_data[ship_idx];
 
             initialize_ship(current_ship, spawn_points[ship_idx], m.ship);
 
-            update_window_char(space, current_ship->pos_x, current_ship->pos_y, m.ship | A_BOLD);
+            update_window_char(space, current_ship->position, m.ship | A_BOLD);
 
             update_score_board(&score_board, ship_data);
-
-            send_msg(responder, &m);
         }
         break;
 
         case Astronaut_movement:
         {
             current_ship = find_ship_info(ship_data, m.ship);
-            if (current_ship == NULL)
+            current_time = time(NULL);
+            if (current_ship == NULL || current_time - current_ship->timeouts[STUNNED] < STUN_TIME)
                 break;
 
-            update_window_char(space, current_ship->pos_x, current_ship->pos_y, ' ');
+            update_window_char(space, current_ship->position, ' ');
 
             new_position(current_ship, m.direction);
 
-            update_window_char(space, current_ship->pos_x, current_ship->pos_y, current_ship->ship | A_BOLD);
-
-            send_msg(responder, &m);
+            update_window_char(space, current_ship->position, current_ship->ship | A_BOLD);
         }
         break;
 
         case Astronaut_zap:
         {
             current_ship = find_ship_info(ship_data, m.ship);
-            if (current_ship == NULL)
+            current_time = time(NULL);
+            if (current_ship == NULL || current_time - current_ship->timeouts[RECHARGING] < RECHARGING_TIME)
                 break;
 
+            current_ship->timeouts[RECHARGING] = current_time;
+            position_info_t zap_position = current_ship->position;
             switch (current_ship->move_type)
             {
             case HORIZONTAL:
             {
                 for (int i = 1; i < WINDOW_SIZE - 1; i++)
                 {
-                    update_window_char(space, i, current_ship->pos_y, '|');
+                    zap_position.x = i;
+                    update_window_char(space, zap_position, '|');
+                }
+                for (int i = 0; i < N_ALIENS; i++)
+                {
+                    if (alien_data[i].position.y == zap_position.y)
+                    {
+                        alien_data[i].alive = 0;
+                        current_ship->points++;
+                    }
+                }
+                for (int i = 0; i < N_SHIPS; i++)
+                {
+                    if (ship_data[i].ship != 0 && ship_data[i].position.y == zap_position.y)
+                    {
+                        ship_data[i].timeouts[STUNNED] = current_time;
+                    }
                 }
             }
             break;
@@ -158,17 +193,32 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
             {
                 for (int i = 1; i < WINDOW_SIZE - 1; i++)
                 {
-                    update_window_char(space, current_ship->pos_x, i, '-');
+                    zap_position.y = i;
+                    update_window_char(space, zap_position, '-');
+                }
+                for (int i = 0; i < N_ALIENS; i++)
+                {
+                    if (alien_data[i].position.x == zap_position.x)
+                    {
+                        alien_data[i].alive = 0;
+                        current_ship->points++;
+                    }
+                }
+                for (int i = 0; i < N_SHIPS; i++)
+                {
+                    if (ship_data[i].ship != 0 && ship_data[i].position.x == zap_position.x)
+                    {
+                        ship_data[i].timeouts[STUNNED] = current_time;
+                    }
                 }
             }
             break;
             default:
                 break;
             }
-            // TODO: IF ALIEN in the way, kill it and update score
-            send_msg(responder, &m);
-        }
 
+            // write_msg(fd_write, alien_data);
+        }
         break;
 
         case Astronaut_disconnect:
@@ -176,21 +226,21 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
             current_ship = find_ship_info(ship_data, m.ship);
             if (current_ship == NULL)
                 break;
+
             // delete the ship from the screen
-            update_window_char(space, current_ship->pos_x, current_ship->pos_y, ' ');
+            update_window_char(space, current_ship->position, ' ');
 
             current_ship->ship = 0;
 
             // update the score board
             update_score_board(&score_board, ship_data);
-
-            send_msg(responder, &m);
         }
         break;
 
         default:
             break;
         }
+        send_msg(responder, &m);
 
         publish_display_data(publisher, ship_data, "display");
 
@@ -213,22 +263,24 @@ void initialize_connection(void **context, void **responder, void **publisher)
     assert(rc == 0);
 }
 
-void initialize_aliens(position_info_t alien_data[])
+void initialize_aliens(alien_info_t alien_data[])
 {
     for (int i = 0; i < N_ALIENS; i++)
     {
-        alien_data[i].pos_x = 3 + random() % (WINDOW_SIZE - 4);
-        alien_data[i].pos_y = 3 + random() % (WINDOW_SIZE - 4);
+        alien_data[i].position.x = 3 + random() % (WINDOW_SIZE - 4);
+        alien_data[i].position.y = 3 + random() % (WINDOW_SIZE - 4);
+        alien_data[i].alive = 1;
     }
 }
 
 void new_position(ship_info_t *current_ship, direction_t direction)
 {
     int *y, *x;
+    position_info_t *pos = &current_ship->position;
     switch (current_ship->move_type)
     {
     case HORIZONTAL:
-        y = &current_ship->pos_y;
+        y = &pos->y;
         if (direction == LEFT)
             (*y)--;
         else if (direction == RIGHT)
@@ -237,7 +289,7 @@ void new_position(ship_info_t *current_ship, direction_t direction)
         break;
 
     case VERTICAL:
-        x = &current_ship->pos_x;
+        x = &pos->x;
         if (direction == UP)
             (*x)--;
         else if (direction == DOWN)
@@ -316,10 +368,10 @@ void update_score_board(WINDOW **score_board, ship_info_t ship_data[])
 
 void initialize_ship(ship_info_t *ship_data, position_info_t spawn_point, char ship)
 {
-    ship_data->move_type = spawn_point.pos_x == MID_POS ? VERTICAL : HORIZONTAL;
-    ship_data->pos_x = spawn_point.pos_x;
-    ship_data->pos_y = spawn_point.pos_y;
-    // TODO: Mudar para position_info_t o ship_data_pos
+    ship_data->move_type = spawn_point.x == MID_POS ? VERTICAL : HORIZONTAL;
+    position_info_t *pos = &ship_data->position;
+    pos->x = spawn_point.x;
+    pos->y = spawn_point.y;
     ship_data->ship = ship;
     ship_data->points = 0;
 }
@@ -333,9 +385,9 @@ void clip_value(int *value, int min, int max)
         *value = max;
 }
 
-void update_window_char(WINDOW *space, int x, int y, char c)
+void update_window_char(WINDOW *space, position_info_t update_position, char c)
 {
-    wmove(space, x, y);
+    wmove(space, update_position.x, update_position.y);
     waddch(space, c);
 }
 
