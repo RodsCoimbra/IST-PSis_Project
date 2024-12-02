@@ -32,6 +32,11 @@ typedef struct remote_char_t
     /* data */
 } remote_char_t;
 
+typedef struct position_info_t
+{
+    int x, y;
+} position_info_t;
+
 #define TCP_PATH_REP "tcp://*:5555"
 #define TCP_PATH_PUB "tcp://*:5556"
 #define TCP_PATH_REQ "tcp://localhost:5555"
