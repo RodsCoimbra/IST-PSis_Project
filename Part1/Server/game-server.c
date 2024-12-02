@@ -3,7 +3,7 @@
 int main()
 {
     void *context, *responder, *publisher;
-    initialize_connection(&context, &responder, &publisher);
+    initialize_connection_server(&context, &responder, &publisher);
 
     run_game(responder, publisher);
 
@@ -45,9 +45,9 @@ void run_aliens(void *responder, void *publisher, WINDOW *space)
     int fd_read, fd_write;
     alien_info_t alien_data[N_ALIENS];
 
-    // fd_write = write_FIFO(FIFO_LOCATION_CHILD_PARENT);
+    // fd_write = create_write_FIFO(FIFO_LOCATION_CHILD_PARENT);
 
-    // fd_read = read_FIFO(FIFO_LOCATION_PARENT_CHILD);
+    // fd_read = create_read_FIFO(FIFO_LOCATION_PARENT_CHILD);
 
     initialize_aliens(alien_data);
 
@@ -55,9 +55,9 @@ void run_aliens(void *responder, void *publisher, WINDOW *space)
     {
         alien_movement(alien_data);
 
-        // write_msg(fd_write, alien_data);
+        // write_FIFO(fd_write, alien_data);
 
-        // receive_msg(fd_read, alien_data);
+        // recv_FIFO(fd_read, alien_data);
 
         sleep(1);
     }
@@ -70,20 +70,20 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
     time_t current_time;
     int fd_read, fd_write;
 
-    // fd_read = read_FIFO(FIFO_LOCATION_CHILD_PARENT);
-    // fd_write = write_FIFO(FIFO_LOCATION_PARENT_CHILD);
+    // fd_read = create_read_FIFO(FIFO_LOCATION_CHILD_PARENT);
+    // fd_write = create_write_FIFO(FIFO_LOCATION_PARENT_CHILD);
     remote_char_t m = {};
     while (1)
     {
-        recv_msg(responder, &m);
+        recv_TCP(responder, &m);
 
-        // receive_msg(fd_read, alien_data);
+        // recv_FIFO(fd_read, alien_data);
 
         switch (m.action)
         {
         case Astronaut_connect:
         {
-            astronaut_connect(ship_data, m, space, score_board);
+            astronaut_connect(ship_data, &m, space, score_board);
         }
         break;
         case Astronaut_movement:
@@ -168,7 +168,7 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
                 break;
             }
 
-            // write_msg(fd_write, alien_data);
+            // write_FIFO(fd_write, alien_data);
         }
         break;
 
@@ -187,11 +187,10 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
             update_score_board(&score_board, ship_data);
         }
         break;
-
         default:
             break;
         }
-        send_msg(responder, &m);
+        send_TCP(responder, &m);
 
         // publish_display_data(publisher, ship_data, "display");
 
@@ -201,7 +200,7 @@ void run_players(void *responder, void *publisher, WINDOW *space, WINDOW *score_
     endwin();
 }
 
-void astronaut_connect(ship_info_t *ship_data, remote_char_t m, WINDOW *space, WINDOW *score_board)
+void astronaut_connect(ship_info_t *ship_data, remote_char_t* m, WINDOW *space, WINDOW *score_board)
 {
     ship_info_t *current_ship = NULL;
     // TODO: MUDAR QUANDO SE mudar O SIZE ECRã
@@ -217,17 +216,17 @@ void astronaut_connect(ship_info_t *ship_data, remote_char_t m, WINDOW *space, W
     int ship_idx = create_new_ship(ship_data);
     if (ship_idx == -1)
     {
-        m.ship = 0;
-        return; // TODO: LIDAR COM ESTE ERRO
+        m->ship = 0;
+        return;
     }
 
-    m.ship = 'A' + ship_idx;
-    m.points = 0;
+    m->ship = 'A' + ship_idx;
+    m->points = 0;
     current_ship = &ship_data[ship_idx];
 
-    initialize_ship(current_ship, spawn_points[ship_idx], m.ship);
+    initialize_ship(current_ship, spawn_points[ship_idx], m->ship);
 
-    update_window_char(space, current_ship->position, m.ship | A_BOLD);
+    update_window_char(space, current_ship->position, m->ship | A_BOLD);
 
     update_score_board(&score_board, ship_data);
 }

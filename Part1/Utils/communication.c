@@ -1,6 +1,6 @@
 #include "communication.h"
 
-void initialize_connection(void **context, void **responder, void **publisher)
+void initialize_connection_server(void **context, void **responder, void **publisher)
 {
     *context = zmq_ctx_new();
     // Responder
@@ -13,7 +13,14 @@ void initialize_connection(void **context, void **responder, void **publisher)
     assert(rc == 0);
 }
 
-void send_msg(void *responder, remote_char_t *m)
+void initialize_connection_client(void **context, void **requester)
+{
+    *context = zmq_ctx_new();
+    *requester = zmq_socket(*context, ZMQ_REQ);
+    zmq_connect(*requester, TCP_PATH_REQ);
+}
+
+void send_TCP(void *responder, remote_char_t *m)
 {
     if (zmq_send(responder, m, sizeof(remote_char_t), 0) == -1)
     {
@@ -22,7 +29,7 @@ void send_msg(void *responder, remote_char_t *m)
     }
 }
 
-void recv_msg(void *responder, remote_char_t *m)
+void recv_TCP(void *responder, remote_char_t *m)
 {
     if (zmq_recv(responder, m, sizeof(remote_char_t), 0) == -1)
     {

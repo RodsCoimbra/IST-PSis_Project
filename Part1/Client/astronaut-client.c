@@ -4,15 +4,15 @@ int main()
 {
     remote_char_t m;
     int valid_action;
-    void *context = zmq_ctx_new();
-    void *requester = zmq_socket(context, ZMQ_REQ);
-    zmq_connect(requester, TCP_PATH_REQ);
+    
+    void *context, *requester;
+    initialize_connection_client(&context, &requester);
 
     m.action = Astronaut_connect;
 
-    send_msg(requester, &m);
+    send_TCP(requester, &m);
 
-    recv_msg(requester, &m);
+    recv_TCP(requester, &m);
     if (m.ship == 0)
     {
         printf("Server is full\n");
@@ -25,12 +25,12 @@ int main()
         valid_action = execute_action(&m);
         if (valid_action)
         {
-            send_msg(requester, &m);
-            recv_msg(requester, &m);
+            send_TCP(requester, &m);
+            recv_TCP(requester, &m);
             mvprintw(0, 0, "Ship %c with pontuation: %d", m.ship, m.points);
         }
         refresh(); /* Print it on to the real screen */
-    } while (m.action != Astronaut_disconnect);
+    } while (m.action != Astronaut_disconnect); 
 
     endwin(); /* End curses mode*/
     zmq_close(requester);
@@ -83,22 +83,4 @@ int execute_action(remote_char_t *m)
         break;
     }
     return 1;
-}
-
-void send_msg(void *requester, remote_char_t *m)
-{
-    if (zmq_send(requester, m, sizeof(remote_char_t), 0) == -1)
-    {
-        perror("zmq_send");
-        exit(1);
-    }
-}
-
-void recv_msg(void *requester, remote_char_t *m)
-{
-    if (zmq_recv(requester, m, sizeof(remote_char_t), 0) == -1)
-    {
-        perror("zmq_recv");
-        exit(1);
-    }
 }

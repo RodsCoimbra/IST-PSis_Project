@@ -37,10 +37,10 @@ typedef struct position_info_t
     int x, y;
 } position_info_t;
 
-#define TCP_PATH_REP "tcp://*:5555"
-#define TCP_PATH_PUB "tcp://*:5556"
-#define TCP_PATH_REQ "tcp://localhost:5555"
-#define TCP_PATH_SUB "tcp://localhost:5556"
+#define TCP_PATH_REP "tcp://*:5569"
+#define TCP_PATH_PUB "tcp://*:5570"
+#define TCP_PATH_REQ "tcp://localhost:5569"
+#define TCP_PATH_SUB "tcp://localhost:5570"
 #define KEY_SPACE 32
 #define KEY_q 113
 #define KEY_Q 81

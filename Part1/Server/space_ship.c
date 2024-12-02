@@ -1,4 +1,4 @@
-#include "space_ship_utils.h"
+#include "space_ship.h"
 
 ship_info_t *find_ship_info(ship_info_t ship_data[], int ship)
 {

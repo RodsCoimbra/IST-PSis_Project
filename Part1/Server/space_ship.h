@@ -1,9 +1,9 @@
-#ifndef SPACE_SHIP_UTILS_H
-#define SPACE_SHIP_UTILS_H
+#ifndef SPACE_SHIP_H
+#define SPACE_SHIP_H
 
-#include "../remote-char.h"
-#include "Utils.h"
 #include <time.h>
+#include "../Utils/remote-char.h"
+#include "../Utils/Utils.h"
 
 #define N_SHIPS 8
 #define RECHARGING_TIME 3
@@ -32,6 +32,6 @@ int create_new_ship(ship_info_t[]);
 
 void new_position(ship_info_t *, direction_t);
 
-void update_score_board(WINDOW **score_board, ship_info_t ship_data[]);
+void update_score_board(WINDOW **, ship_info_t[]);
 
 #endif

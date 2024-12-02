@@ -1,4 +1,4 @@
-#include "space_aliens_utils.h"
+#include "space_aliens.h"
 
 void initialize_aliens(alien_info_t alien_data[])
 {

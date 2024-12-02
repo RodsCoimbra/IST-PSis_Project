@@ -5,17 +5,19 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include "game-server.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include "../Server/space_aliens.h"
 
 typedef struct alien_info_t alien_info_t;
 
-int read_FIFO(char *);
+int create_read_FIFO(char *);
 
-int write_FIFO(char *);
+int create_write_FIFO(char *);
 
-void write_msg(int fd, alien_info_t *m);
+void write_FIFO(int, alien_info_t *);
 
-void receive_msg(int fd, alien_info_t *m);
+void recv_FIFO(int, alien_info_t *);
 
 #define FIFO_LOCATION_CHILD_PARENT "/tmp/SPCInvdrsALIENS"
 
