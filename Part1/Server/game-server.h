@@ -15,12 +15,17 @@
 #include "space_aliens.h"
 #include "../Utils/FIFOUtils.h"
 
-void run_aliens(void *, void *, WINDOW *);
+typedef struct all_ships_t
+{
+    ship_info_t ships[N_SHIPS];
+    alien_info_t aliens[N_ALIENS];
+} all_ships_t;
 
-void run_players(void *, void *, WINDOW *, WINDOW *);
+
+void run_aliens();
+
+void run_players(void *, void *);
 
 void run_game(void *, void *);
-
-void astronaut_connect(ship_info_t[], remote_char_t *, WINDOW *, WINDOW *);
 
 #endif

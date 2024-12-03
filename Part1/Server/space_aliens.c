@@ -10,30 +10,7 @@ void initialize_aliens(alien_info_t alien_data[])
     }
 }
 
-void alien_movement(alien_info_t alien_data[])
+direction_t random_direction()
 {
-    for (int i = 0; i < N_ALIENS; i++)
-    {
-        if (alien_data[i].alive)
-        {
-            direction_t direction = random() % 4;
-            switch (direction)
-            {
-            case UP:
-                alien_data[i].position.x--;
-                break;
-            case DOWN:
-                alien_data[i].position.x++;
-                break;
-            case LEFT:
-                alien_data[i].position.y--;
-                break;
-            case RIGHT:
-                alien_data[i].position.y++;
-                break;
-            }
-            clip_value(&alien_data[i].position.x, MAX_POS, MIN_POS);
-            clip_value(&alien_data[i].position.y, MAX_POS, MIN_POS);
-        }
-    }
+    return (direction_t)(random() % 4);
 }

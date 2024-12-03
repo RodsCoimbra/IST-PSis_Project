@@ -3,6 +3,14 @@
 int create_read_FIFO(char *FIFO_LOCATION)
 {
     int fd;
+    // if (access(FIFO_LOCATION, F_OK) == 0) {
+    //     // FIFO exists, remove it
+    //     if (unlink(FIFO_LOCATION) != 0) {
+    //         perror("Error removing existing FIFO");
+    //         exit(-1);
+    //     }
+    // }
+
     while ((fd = open(FIFO_LOCATION, O_RDONLY)) == -1)
     {
         if (mkfifo(FIFO_LOCATION, 0666) != 0)
@@ -17,6 +25,14 @@ int create_read_FIFO(char *FIFO_LOCATION)
 int create_write_FIFO(char *FIFO_LOCATION)
 {
     int fd;
+    // if (access(FIFO_LOCATION, F_OK) == 0) {
+    //     // FIFO exists, remove it
+    //     if (unlink(FIFO_LOCATION) != 0) {
+    //         perror("Error removing existing FIFO");
+    //         exit(-1);
+    //     }
+    // }
+    
     while ((fd = open(FIFO_LOCATION, O_WRONLY)) == -1)
     {
         if (mkfifo(FIFO_LOCATION, 0666) != 0)

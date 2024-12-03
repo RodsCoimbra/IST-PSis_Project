@@ -20,6 +20,14 @@ void initialize_connection_client(void **context, void **requester)
     zmq_connect(*requester, TCP_PATH_REQ);
 }
 
+void initialize_connection_sub(void **context, void **subscriber, char *topic)
+{
+    *context = zmq_ctx_new();
+    *subscriber = zmq_socket(*context, ZMQ_SUB);
+    zmq_connect(*subscriber, TCP_PATH_SUB);
+    zmq_setsockopt(*subscriber, ZMQ_SUBSCRIBE, topic, strlen(topic));
+}
+
 void send_TCP(void *responder, remote_char_t *m)
 {
     if (zmq_send(responder, m, sizeof(remote_char_t), 0) == -1)
@@ -38,18 +46,22 @@ void recv_TCP(void *responder, remote_char_t *m)
     }
 }
 
-/*
-void publish_display_data(void *publisher, ship_info_t *ship_data, char *topic)
+
+void publish_display_data(void *publisher, all_ships_t *all_ships, char *topic)
 {
     if (zmq_send(publisher, topic, strlen(topic), ZMQ_SNDMORE) == -1)
     {
         perror("zmq_send");
         exit(1);
     }
-    if (zmq_send(publisher, ship_data, sizeof(ship_info_t) * N_SHIPS, 0) == -1)
+    if (zmq_send(publisher, all_ships, sizeof(all_ships), 0) == -1)
     {
         perror("zmq_send");
         exit(1);
     }
 }
-*/
+
+void receive_display_data(void *subscriber, all_ships_t *all_ships, char *topic)
+{
+
+}
