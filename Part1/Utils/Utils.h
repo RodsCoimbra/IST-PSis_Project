@@ -4,7 +4,7 @@
 #include <ncurses.h>
 #include "remote-char.h"
 
-#define WINDOW_SIZE 20
+#define WINDOW_SIZE 22
 #define MAX_POS WINDOW_SIZE - 4
 #define MIN_POS 3
 #define MID_POS WINDOW_SIZE / 2
