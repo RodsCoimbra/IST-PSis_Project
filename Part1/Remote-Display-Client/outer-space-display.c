@@ -6,7 +6,7 @@ int main()
     WINDOW *space;
 
     initialize_connection_sub(&context, &subscriber, "Display");
-    
+
     initialize_window(&space);
 
     ship_info_t ships[N_SHIPS];
@@ -16,7 +16,7 @@ int main()
     {
         erase_old_data(space, ships, aliens);
 
-        receive_topic(players_sub, ships, "Display");
+        receive_ships(subscriber, ships, aliens);
 
         display_new_data(space, ships, aliens);
     }
@@ -26,33 +26,12 @@ int main()
     return 0;
 }
 
-void receive_ships(void *subscriber, ship_info_t *ships, char *topic)
+void receive_ships(void *subscriber, ship_info_t *ships, alien_info_t *alien)
 {
-    char topic[20];
-    if (zmq_recv(subscriber, topic, sizeof(topic), 0) == -1)
-    {
-        perror("zmq_recv");
-        exit(1);
-    }
-    if(strcmp(topic, "Astronaut") == 0)
-    {
-        if (zmq_recv(subscriber, ships, sizeof(ship_info_t), 0) == -1)
-        {
-            perror("zmq_recv");
-            exit(1);
-        }
-    }
-    else if (strcmp(topic, "Alien") == 0)
-    {
-        if (zmq_recv(subscriber, ships, sizeof(alien_info_t), 0) == -1)
-        {
-            perror("zmq_recv");
-            exit(1);
-        }
-    }
+    recv(subscriber, type)
 }
 
-void erase_old_data(WINDOW *space, ship_info_t* ships, alien_info_t* aliens)
+void erase_old_data(WINDOW *space, ship_info_t *ships, alien_info_t *aliens)
 {
     // Erase ships
     for (int i = 0; i < N_SHIPS; i++)
@@ -71,7 +50,7 @@ void erase_old_data(WINDOW *space, ship_info_t* ships, alien_info_t* aliens)
     wrefresh(space);
 }
 
-void display_new_data(WINDOW *space, ship_info_t* ships, alien_info_t* aliens)
+void display_new_data(WINDOW *space, ship_info_t *ships, alien_info_t *aliens)
 {
     // Display ships
     for (int i = 0; i < N_SHIPS; i++)

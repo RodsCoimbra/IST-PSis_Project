@@ -1,9 +1,9 @@
 all: game-server astronaut-client
 
-game-server: game-server.o FIFOUtils.o communication.o space_ship.o Utils.o space_aliens.o
-	gcc Server/Compiled/game-server.o Utils/Compiled/FIFOUtils.o Utils/Compiled/communication.o Server/Compiled/space_ship.o Utils/Compiled/Utils.o Server/Compiled/space_aliens.o -o game-server -lzmq -lncurses
+game-server: game-server.o communication.o space_ship.o Utils.o space_aliens.o
+	gcc Server/Compiled/game-server.o Utils/Compiled/communication.o Server/Compiled/space_ship.o Utils/Compiled/Utils.o Server/Compiled/space_aliens.o -o game-server -lzmq -lncurses
 
-game-server.o: Server/game-server.c Server/game-server.h Utils/remote-char.h Utils/FIFOUtils.h Utils/communication.h Server/space_ship.h Utils/Utils.h Server/space_aliens.h
+game-server.o: Server/game-server.c Server/game-server.h Utils/remote-char.h Utils/communication.h Server/space_ship.h Utils/Utils.h Server/space_aliens.h
 	gcc -g -c Server/game-server.c -o Server/Compiled/game-server.o
 
 astronaut-client: Client/astronaut-client.o communication.o 
@@ -11,9 +11,6 @@ astronaut-client: Client/astronaut-client.o communication.o
 
 Client/astronaut-client.o: Client/astronaut-client.c Client/astronaut-client.h Utils/remote-char.h
 	gcc -g -c Client/astronaut-client.c -o Client/Compiled/astronaut-client.o
-
-FIFOUtils.o: Utils/FIFOUtils.c Utils/FIFOUtils.h
-	gcc -g -c Utils/FIFOUtils.c -o Utils/Compiled/FIFOUtils.o
 
 communication.o: Utils/communication.c Utils/communication.h
 	gcc -g -c Utils/communication.c -o Utils/Compiled/communication.o

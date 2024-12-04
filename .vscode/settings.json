@@ -2,7 +2,10 @@
     "files.associations": {
         "communication.h": "c",
         "space_ship.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "outer-space-display.h": "c",
+        "game-server.h": "c",
+        "remote-char.h": "c"
     },
     "ros.distro": "noetic"
 }

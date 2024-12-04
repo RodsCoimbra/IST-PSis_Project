@@ -5,16 +5,10 @@
 #include "../Utils/remote-char.h"
 #include "../Utils/Utils.h"
 
-#define N_ALIENS ((WINDOW_SIZE - 2) * (WINDOW_SIZE - 2) / 3)
+void initialize_aliens(alien_info_t *, WINDOW *);
 
-typedef struct alien_info_t
-{
-    position_info_t position;
-    int alive;
-} alien_info_t;
+void alien_movement(alien_info_t *, remote_char_t, WINDOW *);
 
-void initialize_aliens(alien_info_t[]);
-
-void alien_movement(alien_info_t[]);
+direction_t random_direction();
 
 #endif

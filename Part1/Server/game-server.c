@@ -2,56 +2,47 @@
 
 int main()
 {
-    void *context, *responder, *publisher;
-    initialize_connection_server(&context, &responder, &publisher);
-
-    run_game(responder, publisher);
-
-    zmq_close(responder);
-    zmq_close(publisher);
-    zmq_ctx_destroy(context);
-
+    run_game();
     return 0;
 }
 
-void run_game(void *responder, void *publisher)
+void run_game()
 {
-    run_players(responder, publisher);
-    // pid_t pid;
-    // pid = fork();
-    // if (pid < 0)
-    // {
-    //     perror("fork failed");
-    //     return;
-    // }
-    // if (pid == 0)
-    // {
-    //     // run_aliens(*context, *requester);
-    //     int a = 0;
-    //     a = 1;
-    // }
-    // else
-    // {
-    //     run_players(responder, publisher);
-    // }
+    pid_t pid;
+    pid = fork();
+    if (pid < 0)
+    {
+        perror("fork failed");
+        return;
+    }
+    if (pid == 0)
+    {
+        run_aliens();
+    }
+    else
+    {
+        run_players();
+    }
 }
 
-void run_players(void *responder, void *publisher)
+void run_players()
 {
+    time_t current_time;
     WINDOW *space, *score_board;
+    void *context, *responder, *publisher;
+    char topic[20] = "Display";
+    ship_info_t ship_data[N_SHIPS] = {}, *current_ship = NULL;
+    alien_info_t alien_data[N_ALIENS];
+    // all_ships_t all_ships;
+    // memcpy(all_ships.ships, ship_data, sizeof(all_ships.ships));
+    // memcpy(all_ships.aliens, alien_data, sizeof(all_ships.aliens));
+    initialize_connection_server(&context, &responder, &publisher);
 
     initialize_ncurses();
 
     initialize_window(&space, &score_board);
 
-    ship_info_t ship_data[N_SHIPS] = {}, *current_ship = NULL;
-    alien_info_t alien_data[N_ALIENS];
-
-    all_ships_t all_ships = {ship_data, alien_data};
-
-    initialize_aliens(alien_data);
-
-    time_t current_time;
+    initialize_aliens(alien_data, space);
 
     remote_char_t m = {};
     while (1)
@@ -73,41 +64,44 @@ void run_players(void *responder, void *publisher)
             astronaut_disconnect(ship_data, &m, space, score_board);
             break;
         case Alien_movement:
-            
-            //alien_movement(alien_data);
+            alien_movement(alien_data, m, space);
+            // TODO VER SE ESTA VIVO
             break;
         default:
             break;
         }
         send_TCP(responder, &m);
-        
-        publish_display_data(publisher, ship_data, "Astronaut");
+
+        // publish_display_data(publisher, all_ships, topic);
 
         wrefresh(space);
         wrefresh(score_board);
     }
     endwin();
+    zmq_close(responder);
+    zmq_close(publisher);
+    zmq_ctx_destroy(context);
 }
 
-// void run_aliens(void *context, void *requester)
-// {
-//     initialize_connection_client(context, requester);
+void run_aliens()
+{
+    void *context, *requester;
+    remote_char_t alien_msg = {};
 
-//     remote_char_t alien_msg[N_ALIENS] = {};
-//     alien_msg.action = Alien_movement;
-//     alien_msg.ship = '*';
+    initialize_connection_client(context, requester);
 
-//     while (1)
-//     {
-//         for (int i = 0; i < N_ALIENS; i++)
-//         {
-//             alien_msg.direction = random_direction();
+    alien_msg.action = Alien_movement;
+    while (1)
+    {
+        for (int i = 0; i < N_ALIENS; i++)
+        {
+            // TODO TENTAR OPTIMIZAR AO VER SE ESTA MORTO
+            alien_msg.direction = random_direction();
+            alien_msg.ship = i;
 
-//             send_TCP(requester, &alien_msg[i]);
-
-//             recv_TCP(requester, &alien_msg[i]);
-//         }
-
-//         sleep(1);
-//     }
-// }
+            send_TCP(requester, &alien_msg);
+            recv_TCP(requester, &alien_msg);
+        }
+        sleep(1);
+    }
+}

@@ -13,19 +13,11 @@
 #include "../Utils/Utils.h"
 #include "space_ship.h"
 #include "space_aliens.h"
-#include "../Utils/FIFOUtils.h"
-
-typedef struct all_ships_t
-{
-    ship_info_t ships[N_SHIPS];
-    alien_info_t aliens[N_ALIENS];
-} all_ships_t;
-
 
 void run_aliens();
 
-void run_players(void *, void *);
+void run_players();
 
-void run_game(void *, void *);
+void run_game();
 
 #endif

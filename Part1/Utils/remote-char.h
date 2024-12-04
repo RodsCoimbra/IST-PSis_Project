@@ -1,6 +1,26 @@
 #ifndef REMOTE_CHAR_H
 #define REMOTE_CHAR_H
 
+#include <time.h>
+
+#define WINDOW_SIZE 22
+#define MAX_POS WINDOW_SIZE - 4
+#define MIN_POS 3
+#define MID_POS WINDOW_SIZE / 2
+
+#define N_SHIPS 8
+#define N_ALIENS ((WINDOW_SIZE - 2) * (WINDOW_SIZE - 2) / 3)
+#define RECHARGING_TIME 3
+#define STUN_TIME 10
+
+#define TCP_PATH_REP "tcp://*:5505"
+#define TCP_PATH_PUB "tcp://*:5506"
+#define TCP_PATH_REQ "tcp://localhost:5505"
+#define TCP_PATH_SUB "tcp://localhost:5506"
+#define KEY_SPACE 32
+#define KEY_q 113
+#define KEY_Q 81
+
 typedef enum movement_t
 {
     VERTICAL,
@@ -38,12 +58,31 @@ typedef struct position_info_t
     int x, y;
 } position_info_t;
 
-#define TCP_PATH_REP "tcp://*:5505"
-#define TCP_PATH_PUB "tcp://*:5506"
-#define TCP_PATH_REQ "tcp://localhost:5505"
-#define TCP_PATH_SUB "tcp://localhost:5506"
-#define KEY_SPACE 32
-#define KEY_q 113
-#define KEY_Q 81
+typedef struct ship_info_t
+{
+    int ship;
+    position_info_t position;
+    int points;
+    movement_t move_type;
+    time_t timeouts[2];
+} ship_info_t;
+
+typedef struct alien_info_t
+{
+    position_info_t position;
+    int alive;
+} alien_info_t;
+
+typedef enum status_t
+{
+    RECHARGING,
+    STUNNED
+} status_t;
+
+typedef struct all_ships_t
+{
+    ship_info_t ships[N_SHIPS];
+    alien_info_t aliens[N_ALIENS];
+} all_ships_t;
 
 #endif

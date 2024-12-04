@@ -1,29 +1,10 @@
 #ifndef SPACE_SHIP_H
 #define SPACE_SHIP_H
 
-#include <time.h>
 #include "../Utils/remote-char.h"
 #include "../Utils/Utils.h"
-#include "space_aliens.h"
 
-#define N_SHIPS 8
-#define RECHARGING_TIME 3
-#define STUN_TIME 10
-
-typedef struct ship_info_t
-{
-    int ship;
-    position_info_t position;
-    int points;
-    movement_t move_type;
-    time_t timeouts[2];
-} ship_info_t;
-
-typedef enum status_t
-{
-    RECHARGING,
-    STUNNED
-} status_t;
+typedef struct alien_info_t alien_info_t;
 
 ship_info_t *find_ship_info(ship_info_t[], int);
 
