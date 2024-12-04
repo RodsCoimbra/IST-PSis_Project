@@ -157,8 +157,6 @@ void astronaut_zap(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, alie
         break;
     }
     update_score_board(&score_board, ship_data);
-    
-
 }
 
 void astronaut_disconnect(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, WINDOW *score_board)
@@ -178,23 +176,43 @@ void astronaut_disconnect(ship_info_t *ship_data, remote_char_t *m, WINDOW *spac
     update_score_board(&score_board, ship_data);
 }
 
-void draw_horizontal(WINDOW *space, position_info_t position, int ship_position, char symbol)
+void draw_horizontal(WINDOW *space, position_info_t position, ship_info_t *ship_data, char symbol)
 {
-    for (position.x = 1; position.x < WINDOW_SIZE - 1; position.x++)
+    int draw = 1;
+    for (position.x = 1; position.x < WINDOW_SIZE - 1; position.x++, draw = 1)
     {
-        if (position.x == ship_position)
-            continue;
-        update_window_char(space, position, symbol);
+        if (position.x < MIN_POS || position.x > MAX_POS)
+            for (int i = 0; i < N_SHIPS; i++)
+                if (ship_data[i].ship != 0 && cmp_position(ship_data[i].position, position))
+                {
+                    draw = 0;
+                    break;
+                }
+        if (draw)
+            update_window_char(space, position, symbol);
     }
 }
 
-void draw_vertical(WINDOW *space, position_info_t position, int ship_position, char symbol)
+int cmp_position(position_info_t a, position_info_t b)
 {
-    for (position.y = 1; position.y < WINDOW_SIZE - 1; position.y++)
+    return a.x == b.x && a.y == b.y;
+}
+
+void draw_vertical(WINDOW *space, position_info_t position, ship_info_t *ship_data, char symbol)
+{
+    int draw = 1;
+    for (position.y = 1; position.y < WINDOW_SIZE - 1; position.y++, draw = 1)
     {
-        if (position.y == ship_position)
-            continue;
-        update_window_char(space, position, symbol);
+        if (position.y < MIN_POS || position.y > MAX_POS)
+            for (int i = 0; i < N_SHIPS; i++)
+                if (ship_data[i].ship != 0 && cmp_position(ship_data[i].position, position))
+                {
+                    draw = 0;
+                    break;
+                }
+
+        if (draw)
+            update_window_char(space, position, symbol);
     }
 }
 
@@ -202,7 +220,7 @@ void hozirontal_zap(ship_info_t *current_ship, alien_info_t *alien_data, ship_in
 {
     position_info_t zap_position = current_ship->position;
     // Draw the zap
-    draw_horizontal(space, zap_position, current_ship->position.x, '|');
+    draw_horizontal(space, zap_position, ship_data, '|');
 
     // Check for collisions with aliens
     for (int i = 0; i < N_ALIENS; i++)
@@ -227,15 +245,14 @@ void hozirontal_zap(ship_info_t *current_ship, alien_info_t *alien_data, ship_in
     usleep(500000);
 
     // Clear the zap
-    draw_horizontal(space, zap_position, current_ship->position.x, ' ');
-
+    draw_horizontal(space, zap_position, ship_data, ' ');
 }
 
 void vertical_zap(ship_info_t *current_ship, alien_info_t *alien_data, ship_info_t *ship_data, WINDOW *space, int current_time)
 {
     position_info_t zap_position = current_ship->position;
     // Draw the zap
-    draw_vertical(space, zap_position, current_ship->position.y, '-');
+    draw_vertical(space, zap_position, ship_data, '-');
 
     // Check for collisions with aliens
     for (int i = 0; i < N_ALIENS; i++)
@@ -259,5 +276,5 @@ void vertical_zap(ship_info_t *current_ship, alien_info_t *alien_data, ship_info
     usleep(500000);
 
     // Clear the zap
-    draw_vertical(space, zap_position, current_ship->position.y, ' ');
+    draw_vertical(space, zap_position, ship_data, ' ');
 }

@@ -48,28 +48,28 @@ void recv_TCP(void *responder, remote_char_t *m)
 
 void recv_subscription_TCP(void *subscriber, all_ships_t *all_data)
 {
-    char type[20];
-    if (zmq_recv(subscriber, type, 20, 0) == -1)
+    char topic[8];
+    if (zmq_recv(subscriber, topic, 7, 0) == -1)
     {
         perror("zmq_recv");
         exit(1);
     }
 
-    if (zmq_recv(subscriber, all_data, sizeof(all_data), 0) == -1)
+    if (zmq_recv(subscriber, all_data, sizeof(all_ships_t), 0) == -1)
     {
         perror("zmq_recv");
         exit(1);
     }
 }
 
-void publish_display_data(void *publisher, all_ships_t *all_ships, char *topic)
+void publish_display_data(void *publisher, all_ships_t *all_ships)
 {
-    if (zmq_send(publisher, topic, 20, ZMQ_SNDMORE) == -1)
+    if (zmq_send(publisher, "Display", 7, ZMQ_SNDMORE) == -1)
     {
         perror("zmq_send");
         exit(1);
     }
-    if (zmq_send(publisher, all_ships, sizeof(all_ships), 0) == -1)
+    if (zmq_send(publisher, all_ships, sizeof(all_ships_t), 0) == -1)
     {
         perror("zmq_send");
         exit(1);

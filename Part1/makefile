@@ -1,4 +1,4 @@
-all: game-server astronaut-client
+all: game-server astronaut-client outer-space-display
 
 game-server: game-server.o communication.o space_ship.o Utils.o space_aliens.o
 	gcc Server/Compiled/game-server.o Utils/Compiled/communication.o Server/Compiled/space_ship.o Utils/Compiled/Utils.o Server/Compiled/space_aliens.o -o game-server -lzmq -lncurses
@@ -11,6 +11,12 @@ astronaut-client: Client/astronaut-client.o communication.o
 
 Client/astronaut-client.o: Client/astronaut-client.c Client/astronaut-client.h Utils/remote-char.h
 	gcc -g -c Client/astronaut-client.c -o Client/Compiled/astronaut-client.o
+
+outer-space-display: Remote-Display-Client/outer-space-display.o communication.o space_ship.o space_aliens.o Utils.o
+	gcc Remote-Display-Client/Compiled/outer-space-display.o Utils/Compiled/communication.o Server/Compiled/space_ship.o Server/Compiled/space_aliens.o Utils/Compiled/Utils.o -o outer-space-display -lzmq -lncurses
+
+Remote-Display-Client/outer-space-display.o: Remote-Display-Client/outer-space-display.c Remote-Display-Client/outer-space-display.h Utils/remote-char.h
+	gcc -g -c Remote-Display-Client/outer-space-display.c -o Remote-Display-Client/Compiled/outer-space-display.o
 
 communication.o: Utils/communication.c Utils/communication.h
 	gcc -g -c Utils/communication.c -o Utils/Compiled/communication.o
@@ -25,4 +31,4 @@ space_aliens.o: Server/space_aliens.c Server/space_aliens.h Utils/remote-char.h 
 	gcc -g -c Server/space_aliens.c -o Server/Compiled/space_aliens.o
 
 clean:
-	rm -f */Compiled/*.o game-server astronaut-client
+	rm -f */Compiled/*.o game-server astronaut-client outer-space-display
