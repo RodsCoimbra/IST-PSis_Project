@@ -3,6 +3,7 @@
 
 #include "../Utils/remote-char.h"
 #include "../Utils/Utils.h"
+#include <unistd.h>
 
 typedef struct alien_info_t alien_info_t;
 
@@ -24,11 +25,16 @@ void astronaut_connect(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, 
 
 void astronaut_movement(ship_info_t *ship_data, remote_char_t *m, WINDOW *space);
 
-void astronaut_zap(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, alien_info_t *alien_data);
+void astronaut_zap(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, alien_info_t *alien_data, WINDOW *score_board);
 
 void astronaut_disconnect(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, WINDOW *score_board);
 
 void hozirontal_zap(ship_info_t *current_ship, alien_info_t *alien_data, ship_info_t *ship_data, WINDOW *space, int current_time);
 
 void vertical_zap(ship_info_t *current_ship, alien_info_t *alien_data, ship_info_t *ship_data, WINDOW *space, int current_time);
+
+void draw_horizontal(WINDOW *space, position_info_t position, int ship_position, char symbol);
+
+void draw_vertical(WINDOW *space, position_info_t position, int ship_position, char symbol);
+
 #endif

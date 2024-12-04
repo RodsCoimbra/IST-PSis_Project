@@ -98,7 +98,6 @@ int IsRecharging(ship_info_t *current_ship, time_t current_time)
 void astronaut_connect(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, WINDOW *score_board)
 {
     ship_info_t *current_ship = NULL;
-    // TODO: MUDAR QUANDO SE mudar O SIZE ECRã
     position_info_t spawn_points[] = {{1, MID_POS},
                                       {WINDOW_SIZE - 2, MID_POS},
                                       {MID_POS, 1},
@@ -140,13 +139,13 @@ void astronaut_movement(ship_info_t *ship_data, remote_char_t *m, WINDOW *space)
     update_window_char(space, current_ship->position, current_ship->ship | A_BOLD);
 }
 
-void astronaut_zap(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, alien_info_t *alien_data)
+void astronaut_zap(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, alien_info_t *alien_data, WINDOW *score_board)
 {
     ship_info_t *current_ship = find_ship_info(ship_data, m->ship);
     time_t current_time = time(NULL);
     if (current_ship == NULL || IsRecharging(current_ship, current_time))
         return;
-    //TODO UPDATE THE scoreboard
+
     current_ship->timeouts[RECHARGING] = current_time;
     switch (current_ship->move_type)
     {
@@ -157,6 +156,9 @@ void astronaut_zap(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, alie
         vertical_zap(current_ship, alien_data, ship_data, space, current_time);
         break;
     }
+    update_score_board(&score_board, ship_data);
+    
+
 }
 
 void astronaut_disconnect(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, WINDOW *score_board)
@@ -168,27 +170,44 @@ void astronaut_disconnect(ship_info_t *ship_data, remote_char_t *m, WINDOW *spac
     // delete the ship from the screen
     update_window_char(space, current_ship->position, ' ');
 
+    m->points = current_ship->points;
+
     current_ship->ship = 0;
 
     // update the score board
     update_score_board(&score_board, ship_data);
 }
 
+void draw_horizontal(WINDOW *space, position_info_t position, int ship_position, char symbol)
+{
+    for (position.x = 1; position.x < WINDOW_SIZE - 1; position.x++)
+    {
+        if (position.x == ship_position)
+            continue;
+        update_window_char(space, position, symbol);
+    }
+}
+
+void draw_vertical(WINDOW *space, position_info_t position, int ship_position, char symbol)
+{
+    for (position.y = 1; position.y < WINDOW_SIZE - 1; position.y++)
+    {
+        if (position.y == ship_position)
+            continue;
+        update_window_char(space, position, symbol);
+    }
+}
+
 void hozirontal_zap(ship_info_t *current_ship, alien_info_t *alien_data, ship_info_t *ship_data, WINDOW *space, int current_time)
 {
     position_info_t zap_position = current_ship->position;
     // Draw the zap
-    for (zap_position.x = 1; zap_position.x < WINDOW_SIZE - 1; zap_position.x++)
-    {
-        if (current_ship->position.x == zap_position.x)
-            continue;
-        update_window_char(space, zap_position, '|');
-    }
+    draw_horizontal(space, zap_position, current_ship->position.x, '|');
 
     // Check for collisions with aliens
     for (int i = 0; i < N_ALIENS; i++)
     {
-        if (alien_data[i].position.y == zap_position.y)
+        if (alien_data[i].alive == 1 && alien_data[i].position.y == zap_position.y)
         {
             alien_data[i].alive = 0;
             current_ship->points++;
@@ -203,23 +222,25 @@ void hozirontal_zap(ship_info_t *current_ship, alien_info_t *alien_data, ship_in
             ship_data[i].timeouts[STUNNED] = current_time;
         }
     }
+    wrefresh(space);
+
+    usleep(500000);
+
+    // Clear the zap
+    draw_horizontal(space, zap_position, current_ship->position.x, ' ');
+
 }
 
 void vertical_zap(ship_info_t *current_ship, alien_info_t *alien_data, ship_info_t *ship_data, WINDOW *space, int current_time)
 {
     position_info_t zap_position = current_ship->position;
     // Draw the zap
-    for (zap_position.y = 1; zap_position.y < WINDOW_SIZE - 1; zap_position.y++)
-    {
-        if (current_ship->position.y == zap_position.y)
-            continue;
-        update_window_char(space, zap_position, '-');
-    }
+    draw_vertical(space, zap_position, current_ship->position.y, '-');
 
     // Check for collisions with aliens
     for (int i = 0; i < N_ALIENS; i++)
     {
-        if (alien_data[i].position.x == zap_position.x)
+        if (alien_data[i].alive == 1 && alien_data[i].position.x == zap_position.x)
         {
             alien_data[i].alive = 0;
             current_ship->points++;
@@ -234,4 +255,9 @@ void vertical_zap(ship_info_t *current_ship, alien_info_t *alien_data, ship_info
             ship_data[i].timeouts[STUNNED] = current_time;
         }
     }
+    wrefresh(space);
+    usleep(500000);
+
+    // Clear the zap
+    draw_vertical(space, zap_position, current_ship->position.y, ' ');
 }

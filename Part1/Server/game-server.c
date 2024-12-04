@@ -58,14 +58,13 @@ void run_players()
             astronaut_movement(ship_data, &m, space);
             break;
         case Astronaut_zap:
-            astronaut_zap(ship_data, &m, space, alien_data);
+            astronaut_zap(ship_data, &m, space, alien_data, score_board);
             break;
         case Astronaut_disconnect:
             astronaut_disconnect(ship_data, &m, space, score_board);
             break;
         case Alien_movement:
-            alien_movement(alien_data, m, space);
-            // TODO VER SE ESTA VIVO
+            alien_movement(alien_data, &m, space);
             break;
         default:
             break;
@@ -87,20 +86,29 @@ void run_aliens()
 {
     void *context, *requester;
     remote_char_t alien_msg = {};
+    int alive[N_ALIENS];
+    for (int i = 0; i < N_ALIENS; i++)
+    {
+        alive[i] = 1;
+    }
 
-    initialize_connection_client(context, requester);
+    initialize_connection_client(&context, &requester);
 
     alien_msg.action = Alien_movement;
     while (1)
     {
         for (int i = 0; i < N_ALIENS; i++)
         {
-            // TODO TENTAR OPTIMIZAR AO VER SE ESTA MORTO
-            alien_msg.direction = random_direction();
-            alien_msg.ship = i;
-
-            send_TCP(requester, &alien_msg);
-            recv_TCP(requester, &alien_msg);
+            if (alive[i])
+            {
+                alien_msg.direction = random_direction();
+                alien_msg.points = i;
+                alien_msg.ship = 1;
+                send_TCP(requester, &alien_msg);
+                recv_TCP(requester, &alien_msg);
+                if (alien_msg.ship == 0)
+                    alive[i] = 0;
+            }
         }
         sleep(1);
     }
