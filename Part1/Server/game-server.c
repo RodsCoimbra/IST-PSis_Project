@@ -41,10 +41,8 @@ void run_game()
  */
 void run_players(int encryption)
 {
-    time_t current_time;
     WINDOW *space, *score_board;
     void *context, *responder, *publisher;
-    ship_info_t *current_ship = NULL;
     all_ships_t all_ships;
     for (int i = 0; i < N_SHIPS; i++)
     {
@@ -131,12 +129,17 @@ void run_aliens(int encryption)
                 alien_msg.direction = random_direction();
                 alien_msg.points = i;
                 alien_msg.ship = 1;
+
                 send_TCP(requester, &alien_msg);
+
                 recv_TCP(requester, &alien_msg);
-                if (alien_msg.ship == 0)
+
+                if (alien_msg.ship == 0) // if alien_msg.ship == 0, the alien was killed
                     alive[i] = 0;
             }
         }
         sleep(1);
     }
+    zmq_close(requester);
+    zmq_ctx_destroy(context);
 }

@@ -1,15 +1,20 @@
 #include "astronaut-client.h"
 
+/*
+ * Function main
+ *
+ * Client of the game, connects to the server and handles movement and zapping of a single astronaut
+ */
 int main()
 {
     remote_char_t m;
     int valid_action;
-    
+
     void *context, *requester;
     initialize_connection_client(&context, &requester);
 
     m.action = Astronaut_connect;
-
+    // first connection to receive encryption key and ship character
     send_TCP(requester, &m);
 
     recv_TCP(requester, &m);
@@ -30,7 +35,7 @@ int main()
             mvprintw(0, 0, "Ship %c with pontuation: %d", m.ship, m.points);
         }
         refresh(); /* Print it on to the real screen */
-    } while (m.action != Astronaut_disconnect); 
+    } while (m.action != Astronaut_disconnect);
 
     endwin(); /* End curses mode*/
     zmq_close(requester);
@@ -41,14 +46,12 @@ int main()
     return 0;
 }
 
-void initialize_ncurses()
-{
-    initscr();            /* Start curses mode 		*/
-    cbreak();             /* Line buffering disabled	*/
-    keypad(stdscr, TRUE); /* We get F1, F2 etc..		*/
-    noecho();             /* Don't echo() while we do getch */
-}
-
+/*
+ * Function execute_action
+ *
+ * Receives the key pressed by the user and sets the action of the astronaut
+ * @param m: remote_char_t pointer to the astronaut
+ */
 int execute_action(remote_char_t *m)
 {
     int key;

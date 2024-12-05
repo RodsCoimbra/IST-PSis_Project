@@ -10,12 +10,15 @@
  */
 void initialize_connection_server(void **context, void **responder, void **publisher)
 {
+    // Create new zmq context
     *context = zmq_ctx_new();
-    // Responder
+
+    // Initialize responder socket
     *responder = zmq_socket(*context, ZMQ_REP);
     int rc = zmq_bind(*responder, TCP_PATH_REP);
     assert(rc == 0);
-    // Publisher
+
+    // Initialize publisher socket
     *publisher = zmq_socket(*context, ZMQ_PUB);
     rc = zmq_bind(*publisher, TCP_PATH_PUB);
     assert(rc == 0);
@@ -112,7 +115,7 @@ void recv_subscription_TCP(void *subscriber, all_ships_t *all_data)
  * Publish display data to all outer displays
  * @param publisher: zmq socket
  * @param all_ships: all ships data
-*/
+ */
 void publish_display_data(void *publisher, all_ships_t *all_ships)
 {
     if (zmq_send(publisher, "Display", 7, ZMQ_SNDMORE) == -1)

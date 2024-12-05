@@ -2,7 +2,7 @@
 
 /*
  * Function:  find_ship_info
- * 
+ *
  * Find the correct ship data based on the received ship character
  *
  *  @param ship_data: array of ship_info_t to search in
@@ -25,7 +25,7 @@ ship_info_t *find_ship_info(ship_info_t ship_data[], int ship)
 
 /*
  * Function:  create_new_ship
- * 
+ *
  * Find the first available ship slot in the ship_data array
  *
  *  @param ship_data: array of ship_info_t to search in
@@ -63,15 +63,14 @@ void initialize_ship(ship_info_t *ship_data, position_info_t spawn_point, char s
     ship_data->points = 0;
     ship_data->encryption = random();
     ship_data->zap = NO_ZAP;
+
     for (int i = 0; i < 2; i++)
-    {
         ship_data->timeouts[i] = 0;
-    }
 }
 
 /*
  * Function:  new_position
- * 
+ *
  * Update the ship position based on the direction
  *
  *  @param current_ship: pointer to the ship_info_t struct to update
@@ -81,6 +80,7 @@ void new_position(ship_info_t *current_ship, direction_t direction)
 {
     int *y, *x;
     position_info_t *pos = &current_ship->position;
+
     switch (current_ship->move_type)
     {
     case HORIZONTAL:
@@ -117,7 +117,7 @@ void update_score_board(WINDOW **score_board, ship_info_t ship_data[])
     for (int i = 0; i < N_SHIPS; i++)
     {
         ship_info_t current_ship = ship_data[i];
-        if (current_ship.ship != 0)
+        if (current_ship.ship != 0) // if the ship is connected
         {
             wmove(*score_board, score_pos, 3);
             wprintw(*score_board, "%c - %d", current_ship.ship, current_ship.points);
@@ -194,7 +194,7 @@ void astronaut_connect(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, 
 
     initialize_ship(current_ship, spawn_points[ship_idx], m->ship);
 
-    m->encryption = current_ship->encryption;
+    m->encryption = current_ship->encryption; // send the encryption key to the client
 
     update_window_char(space, current_ship->position, m->ship | A_BOLD);
 
@@ -214,13 +214,17 @@ void astronaut_movement(ship_info_t *ship_data, remote_char_t *m, WINDOW *space)
 {
     ship_info_t *current_ship = find_ship_info(ship_data, m->ship);
 
+    // If the ship is not connected or is stunned, do nothing
     if (current_ship == NULL || IsStunned(current_ship))
         return;
 
+    // Delete the ship from the screen
     update_window_char(space, current_ship->position, ' ');
 
+    // Update the new position
     new_position(current_ship, m->direction);
 
+    // Draw the ship in the new position
     update_window_char(space, current_ship->position, current_ship->ship | A_BOLD);
 }
 
@@ -236,12 +240,16 @@ void astronaut_movement(ship_info_t *ship_data, remote_char_t *m, WINDOW *space)
  */
 void astronaut_zap(all_ships_t *all_ships, remote_char_t *m, WINDOW *space, WINDOW *score_board, void *publisher)
 {
-    ship_info_t *current_ship = find_ship_info(all_ships->ships, m->ship);
     time_t current_time = time(NULL);
+    ship_info_t *current_ship = find_ship_info(all_ships->ships, m->ship);
+
+    // If the ship is not connected or is recharging, do nothing
     if (current_ship == NULL || IsRecharging(current_ship, current_time))
         return;
 
+    // Update the recharging timeout
     current_ship->timeouts[RECHARGING] = current_time;
+
     switch (current_ship->move_type)
     {
     case HORIZONTAL:
@@ -251,7 +259,10 @@ void astronaut_zap(all_ships_t *all_ships, remote_char_t *m, WINDOW *space, WIND
         vertical_zap(current_ship, all_ships, space, current_time, publisher);
         break;
     }
+
     update_score_board(&score_board, all_ships->ships);
+
+    // Update the points of the client
     m->points = current_ship->points;
 }
 
@@ -274,8 +285,10 @@ void astronaut_disconnect(ship_info_t *ship_data, remote_char_t *m, WINDOW *spac
     // delete the ship from the screen
     update_window_char(space, current_ship->position, ' ');
 
+    // send the final pontuation to the client
     m->points = current_ship->points;
 
+    // reset the ship data
     current_ship->ship = 0;
 
     // update the score board
@@ -295,12 +308,16 @@ void astronaut_disconnect(ship_info_t *ship_data, remote_char_t *m, WINDOW *spac
 void draw_horizontal(WINDOW *space, position_info_t position, ship_info_t *ship_data, char symbol)
 {
     int draw = 1;
+
+    // pass trough all the positions in the window
     for (position.x = 1; position.x < WINDOW_SIZE - 1; position.x++, draw = 1)
     {
+        // check if the position is within the window
         if (position.x < MIN_POS || position.x > MAX_POS)
             for (int i = 0; i < N_SHIPS; i++)
                 if (ship_data[i].ship != 0 && cmp_position(ship_data[i].position, position))
                 {
+                    // if there is a connected ship in the position, do not draw
                     draw = 0;
                     break;
                 }
@@ -337,12 +354,16 @@ int cmp_position(position_info_t a, position_info_t b)
 void draw_vertical(WINDOW *space, position_info_t position, ship_info_t *ship_data, char symbol)
 {
     int draw = 1;
+
+    // pass trough all the positions in the window
     for (position.y = 1; position.y < WINDOW_SIZE - 1; position.y++, draw = 1)
     {
+        // check if the position is within the window
         if (position.y < MIN_POS || position.y > MAX_POS)
             for (int i = 0; i < N_SHIPS; i++)
                 if (ship_data[i].ship != 0 && cmp_position(ship_data[i].position, position))
                 {
+                    // if there is a connected ship in the position, do not draw
                     draw = 0;
                     break;
                 }
@@ -362,11 +383,13 @@ void draw_vertical(WINDOW *space, position_info_t position, ship_info_t *ship_da
  *  @param space: pointer to the WINDOW struct with the space window
  *  @param current_time: the current time
  */
-void hozirontal_zap(ship_info_t *current_ship, all_ships_t* all_ships, WINDOW *space, int current_time, void *publisher)
+void hozirontal_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *space, int current_time, void *publisher)
 {
     position_info_t zap_position = current_ship->position;
+
     // Draw the zap
     draw_horizontal(space, zap_position, all_ships->ships, '|');
+
     // Check for collisions with aliens
     for (int i = 0; i < N_ALIENS; i++)
     {
@@ -386,9 +409,11 @@ void hozirontal_zap(ship_info_t *current_ship, all_ships_t* all_ships, WINDOW *s
     current_ship->zap = DRAW_ZAP;
 
     wrefresh(space);
-    
+
+    // send an update to the outer-display to display the zap
     publish_display_data(publisher, all_ships);
 
+    // zap is displayed for 0.5 seconds
     usleep(500000);
 
     current_ship->zap = ERASE_ZAP;
@@ -396,6 +421,7 @@ void hozirontal_zap(ship_info_t *current_ship, all_ships_t* all_ships, WINDOW *s
     // Clear the zap
     draw_horizontal(space, zap_position, all_ships->ships, ' ');
 
+    // send an update to the outer-display to erase the zap
     publish_display_data(publisher, all_ships);
 
     current_ship->zap = NO_ZAP;
@@ -411,9 +437,10 @@ void hozirontal_zap(ship_info_t *current_ship, all_ships_t* all_ships, WINDOW *s
  *  @param space: pointer to the WINDOW struct with the space window
  *  @param current_time: the current time
  */
-void vertical_zap(ship_info_t *current_ship, all_ships_t* all_ships, WINDOW *space, int current_time, void *publisher)
+void vertical_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *space, int current_time, void *publisher)
 {
     position_info_t zap_position = current_ship->position;
+
     // Draw the zap
     draw_vertical(space, zap_position, all_ships->ships, '-');
 
@@ -432,7 +459,6 @@ void vertical_zap(ship_info_t *current_ship, all_ships_t* all_ships, WINDOW *spa
     {
         if (all_ships->ships[i].ship != 0 && all_ships->ships[i].position.x == zap_position.x && all_ships->ships[i].ship != current_ship->ship)
             all_ships->ships[i].timeouts[STUNNED] = current_time;
-        
     }
     current_ship->zap = DRAW_ZAP;
 

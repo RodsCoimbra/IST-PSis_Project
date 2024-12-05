@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include "../Utils/remote-char.h"
 #include "../Utils/communication.h"
+#include "../Utils/Utils.h"
 
 void initialize_ncurses();
 

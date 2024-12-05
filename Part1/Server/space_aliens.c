@@ -16,6 +16,8 @@ void initialize_aliens(alien_info_t *alien_data, WINDOW *space, int encryption)
         current_alien->position.y = random() % (MAX_POS - MIN_POS + 1) + MIN_POS;
         current_alien->alive = 1;
         current_alien->encryption = encryption;
+
+        // Update the window with the new alien
         update_window_char(space, current_alien->position, '*');
         wrefresh(space);
     }
@@ -28,7 +30,7 @@ void initialize_aliens(alien_info_t *alien_data, WINDOW *space, int encryption)
  * @param alien_data: array of alien_info_t to store the alien data
  * @param m: remote_char_t with the direction of the alien movement
  * @param space: window where the aliens will be displayed
-*/
+ */
 void alien_movement(alien_info_t *alien_data, remote_char_t *m, WINDOW *space)
 {
     int alien_idx = m->points;
@@ -40,6 +42,7 @@ void alien_movement(alien_info_t *alien_data, remote_char_t *m, WINDOW *space)
     }
     // Delete the current position of the alien
     update_window_char(space, current_alien->position, ' ');
+
     switch (m->direction)
     {
     case UP:
@@ -57,8 +60,10 @@ void alien_movement(alien_info_t *alien_data, remote_char_t *m, WINDOW *space)
     default:
         break;
     }
+    // Ensure the alien is within the bounds of the window
     clip_value(&current_alien->position.x, MIN_POS, MAX_POS);
     clip_value(&current_alien->position.y, MIN_POS, MAX_POS);
+
     // Update the new position of the alien
     update_window_char(space, current_alien->position, '*');
 }
@@ -67,7 +72,7 @@ void alien_movement(alien_info_t *alien_data, remote_char_t *m, WINDOW *space)
  * Function: random_direction
  *
  * Generates a random direction for the alien to move
-*/
+ */
 direction_t random_direction()
 {
     return (direction_t)(random() % 4);
