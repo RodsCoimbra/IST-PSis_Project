@@ -1,5 +1,13 @@
 #include "communication.h"
 
+/*
+ * Function: initialize_connection_server
+ *
+ * Initialize connection for server
+ * @param context: zmq context
+ * @param responder: zmq socket
+ * @param publisher: zmq socket
+ */
 void initialize_connection_server(void **context, void **responder, void **publisher)
 {
     *context = zmq_ctx_new();
@@ -13,6 +21,13 @@ void initialize_connection_server(void **context, void **responder, void **publi
     assert(rc == 0);
 }
 
+/*
+ * Function: initialize_connection_client
+ *
+ * Initialize connection for client
+ * @param context: zmq context
+ * @param requester: zmq socket
+ */
 void initialize_connection_client(void **context, void **requester)
 {
     *context = zmq_ctx_new();
@@ -20,6 +35,14 @@ void initialize_connection_client(void **context, void **requester)
     zmq_connect(*requester, TCP_PATH_REQ);
 }
 
+/*
+ * Function: initialize_connection_sub
+ *
+ * Initialize connection for subscriber
+ * @param context: zmq context
+ * @param subscriber: zmq socket
+ * @param topic: topic to subscribe
+ */
 void initialize_connection_sub(void **context, void **subscriber, char *topic)
 {
     *context = zmq_ctx_new();
@@ -28,6 +51,13 @@ void initialize_connection_sub(void **context, void **subscriber, char *topic)
     zmq_setsockopt(*subscriber, ZMQ_SUBSCRIBE, topic, strlen(topic));
 }
 
+/*
+ * Function: send_TCP
+ *
+ * Send message through TCP
+ * @param responder: zmq socket
+ * @param m: message to send
+ */
 void send_TCP(void *responder, remote_char_t *m)
 {
     if (zmq_send(responder, m, sizeof(remote_char_t), 0) == -1)
@@ -37,6 +67,13 @@ void send_TCP(void *responder, remote_char_t *m)
     }
 }
 
+/*
+ * Function: recv_TCP
+ *
+ * receive message through TCP
+ * @param subscriber: zmq socket
+ * @param topic: topic to subscribe
+ */
 void recv_TCP(void *responder, remote_char_t *m)
 {
     if (zmq_recv(responder, m, sizeof(remote_char_t), 0) == -1)
@@ -46,6 +83,13 @@ void recv_TCP(void *responder, remote_char_t *m)
     }
 }
 
+/*
+ * Function: send_subscription_TCP
+ *
+ * Send subscription message through TCP
+ * @param subscriber: zmq socket
+ * @param all_data: all data to send
+ */
 void recv_subscription_TCP(void *subscriber, all_ships_t *all_data)
 {
     char topic[8];
@@ -62,6 +106,13 @@ void recv_subscription_TCP(void *subscriber, all_ships_t *all_data)
     }
 }
 
+/*
+ * Function: publish_display_data
+ *
+ * Publish display data to all outer displays
+ * @param publisher: zmq socket
+ * @param all_ships: all ships data
+*/
 void publish_display_data(void *publisher, all_ships_t *all_ships)
 {
     if (zmq_send(publisher, "Display", 7, ZMQ_SNDMORE) == -1)

@@ -14,9 +14,9 @@
 #include "space_ship.h"
 #include "space_aliens.h"
 
-void run_aliens();
+void run_aliens(int encryption);
 
-void run_players();
+void run_players(int encryption);
 
 void run_game();
 

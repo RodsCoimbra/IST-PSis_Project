@@ -5,7 +5,7 @@
 #include "../Utils/remote-char.h"
 #include "../Utils/Utils.h"
 
-void initialize_aliens(alien_info_t *, WINDOW *);
+void initialize_aliens(alien_info_t *alien_data, WINDOW *space, int encryption);
 
 void alien_movement(alien_info_t *, remote_char_t *, WINDOW *);
 

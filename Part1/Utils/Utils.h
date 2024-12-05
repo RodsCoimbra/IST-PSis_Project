@@ -8,6 +8,8 @@ void clip_value(int *, int, int);
 
 void initialize_ncurses();
 
+int check_encryption(all_ships_t, remote_char_t);
+
 void initialize_window(WINDOW **, WINDOW **);
 
 void update_window_char(WINDOW *, position_info_t, char);

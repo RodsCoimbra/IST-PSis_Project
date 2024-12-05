@@ -35,6 +35,14 @@ typedef enum direction_t
     RIGHT
 } direction_t;
 
+typedef enum zap_display_t
+{
+    NO_ZAP,
+    DRAW_ZAP,
+    ERASE_ZAP
+
+} zap_display_t;
+
 typedef enum msg_type_t
 {
     Astronaut_connect,
@@ -50,7 +58,7 @@ typedef struct remote_char_t
     int points;
     msg_type_t action;
     direction_t direction;
-    /* data */
+    int encryption;
 } remote_char_t;
 
 typedef struct position_info_t
@@ -65,12 +73,15 @@ typedef struct ship_info_t
     int points;
     movement_t move_type;
     time_t timeouts[2];
+    zap_display_t zap;
+    int encryption;
 } ship_info_t;
 
 typedef struct alien_info_t
 {
     position_info_t position;
     int alive;
+    int encryption;
 } alien_info_t;
 
 typedef enum status_t

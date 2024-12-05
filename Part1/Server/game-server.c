@@ -6,26 +6,40 @@ int main()
     return 0;
 }
 
+/*
+ * Function: run_game
+ *
+ *   It creates two different processes, one for the game server and one for the aliens movement.
+ *
+ */
 void run_game()
 {
     pid_t pid;
-    pid = fork();
+    int encryption = random();
+    pid = fork(); // Create a new process
     if (pid < 0)
     {
         perror("fork failed");
         return;
     }
-    if (pid == 0)
+    if (pid == 0) // Child process
     {
-        run_aliens();
+        run_aliens(encryption);
     }
-    else
+    else // Parent process
     {
-        run_players();
+        run_players(encryption);
     }
 }
 
-void run_players()
+/*
+ * Function: run_players
+ *
+ *   This function is responsible for running the game server and handling the communication between the players and the aliens.
+ *   It then processes the messages and updates the displays accordingly.
+ *
+ */
+void run_players(int encryption)
 {
     time_t current_time;
     WINDOW *space, *score_board;
@@ -36,20 +50,27 @@ void run_players()
     {
         all_ships.ships[i].ship = 0;
     }
+
     initialize_connection_server(&context, &responder, &publisher);
 
     initialize_ncurses();
 
     initialize_window(&space, &score_board);
 
-    initialize_aliens(all_ships.aliens, space);
+    initialize_aliens(all_ships.aliens, space, encryption);
 
     remote_char_t m = {};
     while (1)
     {
-        recv_TCP(responder, &m);
+        recv_TCP(responder, &m); // Receive message from client or alien
+        // Check if is the correct client or alien sending the message
+        if (!check_encryption(all_ships, m))
+        {
+            send_TCP(responder, &m);
+            continue;
+        }
 
-        switch (m.action)
+        switch (m.action) // Perform the action based on the message received
         {
         case Astronaut_connect:
             astronaut_connect(all_ships.ships, &m, space, score_board);
@@ -58,7 +79,7 @@ void run_players()
             astronaut_movement(all_ships.ships, &m, space);
             break;
         case Astronaut_zap:
-            astronaut_zap(all_ships.ships, &m, space, all_ships.aliens, score_board);
+            astronaut_zap(&all_ships, &m, space, score_board, publisher);
             break;
         case Astronaut_disconnect:
             astronaut_disconnect(all_ships.ships, &m, space, score_board);
@@ -70,7 +91,7 @@ void run_players()
             break;
         }
         send_TCP(responder, &m);
-
+        // Publish the updated display data to the outer-display
         publish_display_data(publisher, &all_ships);
 
         wrefresh(space);
@@ -82,7 +103,13 @@ void run_players()
     zmq_ctx_destroy(context);
 }
 
-void run_aliens()
+/*
+ * Function: run_aliens
+ *
+ *   This function is responsible for running the aliens movement and sending updates to the server.
+ *
+ */
+void run_aliens(int encryption)
 {
     void *context, *requester;
     remote_char_t alien_msg = {};
@@ -93,7 +120,7 @@ void run_aliens()
     }
 
     initialize_connection_client(&context, &requester);
-
+    alien_msg.encryption = encryption;
     alien_msg.action = Alien_movement;
     while (1)
     {

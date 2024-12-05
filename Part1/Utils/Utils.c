@@ -31,6 +31,27 @@ void initialize_window(WINDOW **space, WINDOW **score_board)
     wrefresh(*score_board);
 }
 
+int check_encryption(all_ships_t all_ships, remote_char_t m)
+{
+    if (m.action == Astronaut_connect)
+        return 1;
+    
+    if(m.action == Alien_movement)
+    {
+        if (m.encryption == all_ships.aliens[0].encryption) //all aliens have the same encryption
+            return 1;
+    }
+    else
+    {
+        for (int i = 0; i < N_SHIPS; i++)
+        {
+            if (all_ships.ships[i].encryption == m.encryption)
+                return 1;
+        }
+    }
+    return 0;
+}
+
 void clip_value(int *value, int min, int max)
 {
     if (*value < min)
