@@ -11,6 +11,4 @@
 #include "../Utils/communication.h"
 #include "../Utils/Utils.h"
 
-void initialize_ncurses();
-
 int execute_action(remote_char_t *);

@@ -1,9 +1,7 @@
 #include "Utils.h"
 
-/*
- * Function: initialize_ncurses
- *
- * Initializes the ncurses mode
+/**
+ * @brief Initialize the ncurses
  */
 void initialize_ncurses()
 {
@@ -13,12 +11,11 @@ void initialize_ncurses()
     noecho();             /* Don't echo() while we do getch */
 }
 
-/*
- * Function: initialize_window
+/**
+ * @brief Initialize the game window and the score board window
  *
- * Initializes the game window and the score board window
- * @param space: WINDOW pointer to the game window
- * @param score_board: WINDOW pointer to the score board window
+ * @param space Pointer to the game window
+ * @param score_board Pointer to the score board window
  */
 void initialize_window(WINDOW **space, WINDOW **score_board)
 {
@@ -43,13 +40,12 @@ void initialize_window(WINDOW **space, WINDOW **score_board)
     wrefresh(*score_board);
 }
 
-/*
- * Function: check_encryption
+/**
+ * @brief Checks if the encryption of the message is correct to avoid cheating
  *
- * Checks if the encryption of the message is valid to avoid cheating
- * @param all_ships: all_ships_t struct with the ships and aliens
- * @param m: remote_char_t struct with the message
- * @return 1 if the encryption is valid, 0 otherwise
+ * @param all_ships all ships data
+ * @param m message to check
+ * @return 1 if the encryption is correct, 0 otherwise
  */
 int check_encryption(all_ships_t all_ships, remote_char_t m)
 {
@@ -57,7 +53,7 @@ int check_encryption(all_ships_t all_ships, remote_char_t m)
     if (m.action == Astronaut_connect)
         return 1;
 
-    // Check if the encryption is the same as the ship or alien
+    // Check if the message is from an alien or a ship
     if (m.action == Alien_movement)
     {
         if (m.encryption == all_ships.aliens[0].encryption) // all aliens have the same encryption
@@ -76,13 +72,12 @@ int check_encryption(all_ships_t all_ships, remote_char_t m)
     return 0;
 }
 
-/*
- * Function: clip_value
+/**
+ * @brief Clip the value between the min and max values
  *
- * Clips the value between the min and max values
- * @param value: int pointer to the value
- * @param min: int with the minimum value
- * @param max: int with the maximum value
+ * @param value value to clip
+ * @param min minimum value
+ * @param max maximum value
  */
 void clip_value(int *value, int min, int max)
 {
@@ -93,14 +88,14 @@ void clip_value(int *value, int min, int max)
         *value = max;
 }
 
-/*
- * Function: update_window_char
+/**
+ * @brief Update the character in the window
  *
- * Updates the character in the window
- * @param space: WINDOW pointer to the game window
- * @param update_position: position_info_t struct with the position to update
- * @param c: char with the character to update
+ * @param space Pointer to the game window
+ * @param update_position Position to update
+ * @param c Character to update
  */
+
 void update_window_char(WINDOW *space, position_info_t update_position, char c)
 {
     wmove(space, update_position.x, update_position.y);

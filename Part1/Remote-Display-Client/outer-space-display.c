@@ -1,9 +1,9 @@
 #include "outer-space-display.h"
 
-/*
- * Function: main
- *
- * Subscribes to the server and displays the game
+/**
+ * @brief Displays the game that is being played in the server
+ * 
+ * @return Returns 0 if the program ends successfully.
  */
 int main()
 {
@@ -34,12 +34,11 @@ int main()
     return 0;
 }
 
-/*
- * Function: erase_old_data
+/**
+ * @brief Erases the old data from the window
  *
- * Erases the old data from the window
- * @param space: WINDOW pointer to the game window
- * @param all_ships: all_ships_t struct with the ships and aliens
+ * @param space WINDOW pointer to the game window
+ * @param all_ships all_ships_t struct with the data from all ships and aliens
  */
 void erase_old_data(WINDOW *space, all_ships_t all_ships)
 {
@@ -53,13 +52,12 @@ void erase_old_data(WINDOW *space, all_ships_t all_ships)
         update_window_char(space, all_ships.aliens[i].position, ' ');
 }
 
-/*
- * Function: display_new_data
+/**
+ * @brief Displays the new data and zaps in the window 
  *
- * Displays the new data in the window and zaps
- * @param space: WINDOW pointer to the game window
- * @param all_ships: all_ships_t struct with the ships and aliens
- * @param score_board: WINDOW pointer to the score board window
+ * @param space WINDOW pointer to the game window
+ * @param all_ships all_ships_t struct with the data from all ships and aliens
+ * @param score_board WINDOW pointer to the score board window
  */
 void display_new_data(WINDOW *space, all_ships_t all_ships, WINDOW *score_board)
 {
@@ -95,14 +93,14 @@ void display_new_data(WINDOW *space, all_ships_t all_ships, WINDOW *score_board)
     wrefresh(score_board);
 }
 
-/*
- * Function: draw_zap
+
+/**
+ * @brief Draws the zap in the window
  *
- * Draws the zap in the window
- * @param space: WINDOW pointer to the game window
- * @param position: position_info_t struct with the position of the zap
- * @param move_type: movement_t enum with the type of movement of the zap
- * @param ships: ship_info_t pointer to the ships
+ * @param space WINDOW pointer to the game window
+ * @param position position_info_t struct with the position of the zap
+ * @param move_type movement_t enum with the type of movement of the zap 
+ * @param ships ship_info_t pointer to the ships
  */
 void draw_zap(WINDOW *space, position_info_t position, movement_t move_type, ship_info_t *ships)
 {
@@ -118,14 +116,13 @@ void draw_zap(WINDOW *space, position_info_t position, movement_t move_type, shi
     }
 }
 
-/*
- * Function: erase_zap
- *
- * Erases the zap in the window
- * @param space: WINDOW pointer to the game window
- * @param position: position_info_t struct with the position of the zap
- * @param move_type: movement_t enum with the type of movement of the zap
- * @param ships: ship_info_t pointer to the ships
+/**
+ * @brief Erases the zap in the window
+ * 
+ * @param space WINDOW pointer to the game window
+ * @param position position_info_t struct with the position of the zap
+ * @param move_type movement_t enum with the type of movement of the zap
+ * @param ships ship_info_t pointer to the ships
  */
 void erase_zap(WINDOW *space, position_info_t position, movement_t move_type, ship_info_t *ships)
 {

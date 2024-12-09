@@ -6,11 +6,8 @@ int main()
     return 0;
 }
 
-/*
- * Function: run_game
- *
- *   It creates two different processes, one for the game server and one for the aliens movement.
- *
+/**
+ * @brief Creates two different processes, one for the game server and one for the aliens movement.
  */
 void run_game()
 {
@@ -32,12 +29,11 @@ void run_game()
     }
 }
 
-/*
- * Function: run_players
+/**
+ * @brief Runs the game and handles the communication with players and aliens.
+ *   It then processes the messages and updates the display and outer displays accordingly.
  *
- *   This function is responsible for running the game server and handling the communication between the players and the aliens.
- *   It then processes the messages and updates the displays accordingly.
- *
+ * @param encryption The encryption key used for all the aliens' messages.
  */
 void run_players(int encryption)
 {
@@ -89,6 +85,7 @@ void run_players(int encryption)
             break;
         }
         send_TCP(responder, &m);
+
         // Publish the updated display data to the outer-display
         publish_display_data(publisher, &all_ships);
 
@@ -101,11 +98,10 @@ void run_players(int encryption)
     zmq_ctx_destroy(context);
 }
 
-/*
- * Function: run_aliens
+/**
+ * @brief Generate the next random move for each alien and send them to the server every second.
  *
- *   This function is responsible for running the aliens movement and sending updates to the server.
- *
+ * @param encryption The encryption key used for all the aliens' messages.
  */
 void run_aliens(int encryption)
 {

@@ -1,11 +1,13 @@
 #include "space_aliens.h"
 
-/*
- * Function: initialize_aliens
+
+
+/**
+ * @brief Initializes the aliens and displays them in the outer space
  *
- * Initializes the aliens in the outer space
- * @param alien_data: array of alien_info_t to store the aliens data
- * @param space: window where the aliens will be displayed
+ * @param alien_data The array of aliens to be initialized
+ * @param space The window where the aliens will be displayed
+ * @param encryption The encryption key used for all the aliens' messages
  */
 void initialize_aliens(alien_info_t *alien_data, WINDOW *space, int encryption)
 {
@@ -23,13 +25,12 @@ void initialize_aliens(alien_info_t *alien_data, WINDOW *space, int encryption)
     }
 }
 
-/*
- * Function: alien_movement
+/**
+ * @brief Moves the alien in the given direction, deleting the previous position and updating the new one
  *
- * Processes the movement of the aliens by deleting the current position and updating the new one
- * @param alien_data: array of alien_info_t to store the alien data
- * @param m: remote_char_t with the direction of the alien movement
- * @param space: window where the aliens will be displayed
+ * @param alien_data The array of aliens to be moved
+ * @param m The message received from the server
+ * @param space The window where the aliens will be displayed
  */
 void alien_movement(alien_info_t *alien_data, remote_char_t *m, WINDOW *space)
 {
@@ -68,10 +69,10 @@ void alien_movement(alien_info_t *alien_data, remote_char_t *m, WINDOW *space)
     update_window_char(space, current_alien->position, '*');
 }
 
-/*
- * Function: random_direction
+/**
+ * @brief Generates a random direction for the alien to move
  *
- * Generates a random direction for the alien to move
+ * @return The random direction generated
  */
 direction_t random_direction()
 {

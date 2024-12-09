@@ -1,12 +1,11 @@
 #include "communication.h"
 
-/*
- * Function: initialize_connection_server
+/**
+ * @brief Initialize the connection for the server
  *
- * Initialize connection for server
- * @param context: zmq context
- * @param responder: zmq socket
- * @param publisher: zmq socket
+ * @param context Pointer to the zmq context
+ * @param responder Pointer to the zmq responder socket
+ * @param publisher Pointer to the zmq publisher socket
  */
 void initialize_connection_server(void **context, void **responder, void **publisher)
 {
@@ -24,12 +23,11 @@ void initialize_connection_server(void **context, void **responder, void **publi
     assert(rc == 0);
 }
 
-/*
- * Function: initialize_connection_client
+/**
+ * @brief Initialize the connection for the client
  *
- * Initialize connection for client
- * @param context: zmq context
- * @param requester: zmq socket
+ * @param context Pointer to the zmq context
+ * @param requester Pointer to the zmq requester socket
  */
 void initialize_connection_client(void **context, void **requester)
 {
@@ -38,13 +36,12 @@ void initialize_connection_client(void **context, void **requester)
     zmq_connect(*requester, TCP_PATH_REQ);
 }
 
-/*
- * Function: initialize_connection_sub
+/**
+ * @brief Initialize the connection for the subscriber
  *
- * Initialize connection for subscriber
- * @param context: zmq context
- * @param subscriber: zmq socket
- * @param topic: topic to subscribe
+ * @param context Pointer to the zmq context
+ * @param subscriber Pointer to the zmq subscriber socket
+ * @param topic Topic to subscribe
  */
 void initialize_connection_sub(void **context, void **subscriber, char *topic)
 {
@@ -54,12 +51,11 @@ void initialize_connection_sub(void **context, void **subscriber, char *topic)
     zmq_setsockopt(*subscriber, ZMQ_SUBSCRIBE, topic, strlen(topic));
 }
 
-/*
- * Function: send_TCP
+/**
+ * @brief Send message through TCP
  *
- * Send message through TCP
- * @param responder: zmq socket
- * @param m: message to send
+ * @param responder Pointer to the zmq responder socket
+ * @param m message to send
  */
 void send_TCP(void *responder, remote_char_t *m)
 {
@@ -70,12 +66,12 @@ void send_TCP(void *responder, remote_char_t *m)
     }
 }
 
-/*
- * Function: recv_TCP
+
+/**
+ * @brief Receive message through TCP
  *
- * receive message through TCP
- * @param subscriber: zmq socket
- * @param topic: topic to subscribe
+ * @param responder Pointer to the zmq responder socket
+ * @param m message to receive
  */
 void recv_TCP(void *responder, remote_char_t *m)
 {
@@ -86,12 +82,11 @@ void recv_TCP(void *responder, remote_char_t *m)
     }
 }
 
-/*
- * Function: send_subscription_TCP
+/**
+ * @brief Receive message to the subscribed topic through TCP
  *
- * Send subscription message through TCP
- * @param subscriber: zmq socket
- * @param all_data: all data to send
+ * @param subscriber Pointer to the zmq subscriber socket
+ * @param all_data all ships data
  */
 void recv_subscription_TCP(void *subscriber, all_ships_t *all_data)
 {
@@ -109,12 +104,11 @@ void recv_subscription_TCP(void *subscriber, all_ships_t *all_data)
     }
 }
 
-/*
- * Function: publish_display_data
+/**
+ * @brief Publish the display data to all outer-displays
  *
- * Publish display data to all outer displays
- * @param publisher: zmq socket
- * @param all_ships: all ships data
+ * @param publisher Pointer to the zmq publisher socket
+ * @param all_ships Pointer to the all_ships_t struct
  */
 void publish_display_data(void *publisher, all_ships_t *all_ships)
 {

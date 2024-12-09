@@ -1,9 +1,9 @@
 #include "astronaut-client.h"
 
-/*
- * Function main
+/**
+ * @brief Client of the game, receives commands for movement and zapping of a single astronaut and sends it to the server
  *
- * Client of the game, connects to the server and handles movement and zapping of a single astronaut
+ * @return Returns 0 if the program ends successfully.
  */
 int main()
 {
@@ -46,11 +46,12 @@ int main()
     return 0;
 }
 
-/*
- * Function execute_action
- *
- * Receives the key pressed by the user and sets the action of the astronaut
- * @param m: remote_char_t pointer to the astronaut
+/**
+ * @brief Receives the key pressed by the user and sets the action of the astronaut.
+ * 
+ * @param m Holds the astronaut message for the server.
+ * 
+ * @return Returns 1 if the key pressed is valid, 0 otherwise.
  */
 int execute_action(remote_char_t *m)
 {
