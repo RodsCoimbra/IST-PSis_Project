@@ -54,6 +54,7 @@ void run_players(int encryption)
     initialize_aliens(all_ships.aliens, space, encryption);
 
     remote_char_t m = {};
+    int game_end = 0;
     while (1)
     {
         recv_TCP(responder, &m); // Receive message from client or alien
@@ -67,19 +68,26 @@ void run_players(int encryption)
         switch (m.action) // Perform the action based on the message received
         {
         case Astronaut_connect:
-            astronaut_connect(all_ships.ships, &m, space, score_board);
+            if (!game_end) // Block this action if the game has ended
+                astronaut_connect(all_ships.ships, &m, space, score_board);
             break;
         case Astronaut_movement:
-            astronaut_movement(all_ships.ships, &m, space);
+            if (!game_end) // Block this action if the game has ended
+                astronaut_movement(all_ships.ships, &m, space);
             break;
         case Astronaut_zap:
-            astronaut_zap(&all_ships, &m, space, score_board, publisher);
+            if (!game_end) // Block this action if the game has ended
+                astronaut_zap(&all_ships, &m, space, score_board, publisher);
             break;
         case Astronaut_disconnect:
             astronaut_disconnect(all_ships.ships, &m, space, score_board);
             break;
         case Alien_movement:
             alien_movement(all_ships.aliens, &m, space);
+            break;
+        case Alien_end:
+            end_game_display(space, all_ships);
+            game_end = 1;
             break;
         default:
             break;
@@ -107,7 +115,7 @@ void run_aliens(int encryption)
 {
     void *context, *requester;
     remote_char_t alien_msg = {};
-    int alive[N_ALIENS];
+    int alive[N_ALIENS], game_end = 1;
     for (int i = 0; i < N_ALIENS; i++)
     {
         alive[i] = 1;
@@ -118,10 +126,12 @@ void run_aliens(int encryption)
     alien_msg.action = Alien_movement;
     while (1)
     {
+        game_end = 1;
         for (int i = 0; i < N_ALIENS; i++)
         {
             if (alive[i])
             {
+                game_end = 0;
                 alien_msg.direction = random_direction();
                 alien_msg.points = i;
                 alien_msg.ship = 1;
@@ -135,6 +145,13 @@ void run_aliens(int encryption)
             }
         }
         sleep(1);
+        if (game_end)
+        {
+            alien_msg.action = Alien_end; // Send message to the server to end the game if all aliens are dead
+            send_TCP(requester, &alien_msg);
+            recv_TCP(requester, &alien_msg);
+            break;
+        }
     }
     zmq_close(requester);
     zmq_ctx_destroy(context);

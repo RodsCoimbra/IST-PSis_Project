@@ -9,6 +9,7 @@ void initialize_ncurses()
     cbreak();             /* Line buffering disabled	*/
     keypad(stdscr, TRUE); /* We get F1, F2 etc..		*/
     noecho();             /* Don't echo() while we do getch */
+    curs_set(0);          /* Do not display the cursor */
 }
 
 /**
@@ -54,7 +55,7 @@ int check_encryption(all_ships_t all_ships, remote_char_t m)
         return 1;
 
     // Check if the message is from an alien or a ship
-    if (m.action == Alien_movement)
+    if (m.action == Alien_movement || m.action == Alien_end)
     {
         if (m.encryption == all_ships.aliens[0].encryption) // all aliens have the same encryption
             return 1;
@@ -100,4 +101,31 @@ void update_window_char(WINDOW *space, position_info_t update_position, char c)
 {
     wmove(space, update_position.x, update_position.y);
     waddch(space, c);
+}
+
+/**
+ * @brief Displays who wins the game and its score
+ *
+ * @param space WINDOW pointer to the game window
+ * @param all_ships all_ships_t struct with the data from all ships and aliens
+ * @param score_board WINDOW pointer to the score board window
+ */
+void end_game_display(WINDOW *space, all_ships_t all_ships)
+{
+    static int max = -1, max_index = -1;
+    for (int i = 0; i < N_SHIPS; i++)
+    {
+        if (all_ships.ships[i].ship != 0 && all_ships.ships[i].points > max)
+        {
+            max = all_ships.ships[i].points;
+            max_index = i;
+        }
+    }
+    char msg_display[100];
+    sprintf(msg_display, "PLAYER %c WON!!", all_ships.ships[max_index].ship);
+    wmove(space, MIN_POS, MIN_POS);
+    waddstr(space, msg_display);
+    sprintf(msg_display, "SCORE: %d", all_ships.ships[max_index].points);
+    wmove(space, MIN_POS + 1, MIN_POS);
+    waddstr(space, msg_display);
 }

@@ -49,7 +49,8 @@ typedef enum msg_type_t
     Astronaut_movement,
     Astronaut_zap,
     Astronaut_disconnect,
-    Alien_movement
+    Alien_movement,
+    Alien_end
 } msg_type_t;
 
 typedef struct remote_char_t
