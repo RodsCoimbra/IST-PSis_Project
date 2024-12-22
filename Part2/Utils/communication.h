@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "remote-char.h"
+#include "../space.pb-c.h"
 
 typedef struct all_ships_t all_ships_t;
 

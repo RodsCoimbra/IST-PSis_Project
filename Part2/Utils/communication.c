@@ -64,7 +64,6 @@ void send_TCP(void *responder, remote_char_t *m)
     }
 }
 
-
 /**
  * @brief Receive message through TCP
  *
@@ -119,5 +118,27 @@ void publish_display_data(void *publisher, all_ships_t *all_ships)
     {
         perror("zmq_send");
         exit(1);
+    }
+
+    if (zmq_send(publisher, "Score", 5, ZMQ_SNDMORE) == -1)
+    {
+        perror("zmq_send");
+        exit(1);
+    }
+    // Send score board to protobuf
+    ScoreUpdate score_update = SCORE_UPDATE__INIT;
+    for (int i = 0; i < N_SHIPS; i++)
+    {
+        score_update.astronaut = all_ships->ships[i].ship;
+        score_update.points = all_ships->ships[i].points;
+        int msg_len = score_update__get_packed_size(&score_update);
+        char *msg_buf = malloc(msg_len);
+        score_update__pack(&score_update, msg_buf);
+        if (zmq_send(publisher, msg_buf, msg_len, 0) == -1)
+        {
+            perror("zmq_send");
+            exit(1);
+        }
+        free(msg_buf);
     }
 }
