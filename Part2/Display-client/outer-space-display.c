@@ -1,31 +1,34 @@
 #include "outer-space-display.h"
 
-void display()
+void display(long int* disconnect)
 {
-    void *context, *subscriber;
+    void *subscriber;
     WINDOW *space, *score_board;
     all_ships_t all_ships;
 
     char topic[20] = "Display";
     initialize_connection_sub(&context, &subscriber, topic);
 
-    initialize_ncurses();
-
     initialize_window(&space, &score_board);
-
+    
     recv_subscription_TCP(subscriber, &all_ships);
-
+    long int disconnect_local = 0;
     while (1)
     {
+        pthread_mutex_lock(&lock);
+        disconnect_local = *disconnect;
+        pthread_mutex_unlock(&lock);
+        
+        if (disconnect_local)
+            break;
+
         erase_old_data(space, all_ships);
 
         recv_subscription_TCP(subscriber, &all_ships);
 
         display_new_data(space, all_ships, score_board);
     }
-
     zmq_close(subscriber);
-    zmq_ctx_destroy(context);
 }
 
 /**

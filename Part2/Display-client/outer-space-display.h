@@ -7,8 +7,11 @@
 #include "../Utils/Utils.h"
 #include "../Server/space_ship.h"
 #include "../Server/space_aliens.h"
+#include <pthread.h>
+extern void *context;
+extern pthread_mutex_t lock;
 
-void display();
+void display(long int* game_end);
 
 void receive_ships(void *subscriber, all_ships_t *all_ships);
 

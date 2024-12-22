@@ -31,7 +31,6 @@ void initialize_connection_server(void **context, void **responder, void **publi
  */
 void initialize_connection_client(void **context, void **requester)
 {
-    *context = zmq_ctx_new();
     *requester = zmq_socket(*context, ZMQ_REQ);
     zmq_connect(*requester, TCP_PATH_REQ);
 }
@@ -45,7 +44,6 @@ void initialize_connection_client(void **context, void **requester)
  */
 void initialize_connection_sub(void **context, void **subscriber, char *topic)
 {
-    *context = zmq_ctx_new();
     *subscriber = zmq_socket(*context, ZMQ_SUB);
     zmq_connect(*subscriber, TCP_PATH_SUB);
     zmq_setsockopt(*subscriber, ZMQ_SUBSCRIBE, topic, strlen(topic));

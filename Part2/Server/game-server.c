@@ -115,7 +115,7 @@ void *run_aliens(void *enc_key)
     {
         alive[i] = 1;
     }
-
+    context = zmq_ctx_new();
     initialize_connection_client(&context, &requester);
 
     alien_msg.encryption = encryption;
