@@ -3,5 +3,5 @@ syntax = "proto2";
 
 message ScoreUpdate {
     required int32 astronaut = 1;
-    required int32  points    = 2;
+    required int32  points   = 2;
 }

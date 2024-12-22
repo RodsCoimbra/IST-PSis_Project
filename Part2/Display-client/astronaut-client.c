@@ -19,7 +19,6 @@ void *joystick(void *arg)
         pthread_mutex_lock(&lock);
         *disconnect = 1;
         pthread_mutex_unlock(&lock);
-
         pthread_exit(NULL);
     }
 
@@ -31,7 +30,6 @@ void *joystick(void *arg)
             send_TCP(requester, m);
             recv_TCP(requester, m);
         }
-        // refresh(); /* Print it on to the real screen */
     } while (m->action != Astronaut_disconnect);
 
     pthread_mutex_lock(&lock);

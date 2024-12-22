@@ -109,6 +109,7 @@ void recv_subscription_TCP(void *subscriber, all_ships_t *all_data)
  */
 void publish_display_data(void *publisher, all_ships_t *all_ships)
 {
+    //TODO: MUDAR TODOS OS ZMQ_SEND PARA UMA FUNÇÃO
     if (zmq_send(publisher, "Display", 7, ZMQ_SNDMORE) == -1)
     {
         perror("zmq_send");

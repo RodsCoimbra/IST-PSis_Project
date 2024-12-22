@@ -1,56 +1,53 @@
-# Compiler and Flags
-CC       = gcc
-CFLAGS   = -g -Wall
-LDFLAGS  = -lzmq -lncurses -lpthread
+CFLAGS = -g -Wall
 
 # Directories
-SERVER_DIR          = Server
-UTILS_DIR           = Utils
-DISPLAY_CLIENT_DIR  = Display-client
+SERVER          = Server
+UTILS           = Utils
+DISP_CLIENT  	= Display-client
 
-# Output Directories
-SERVER_OBJ_DIR      = $(SERVER_DIR)/Compiled
-UTILS_OBJ_DIR       = $(UTILS_DIR)/Compiled
-DISPLAY_CLIENT_OBJ  = $(DISPLAY_CLIENT_DIR)/Compiled
+#Compiled
+SERVER_C 		= $(SERVER)/Compiled
+UTILS_C 		= $(UTILS)/Compiled
+DISP_CLIENT_C 	= $(DISP_CLIENT)/Compiled
 
-# Targets
-all: game-server astronaut-display-client
+all: game-server display-client
 
-game-server: \
-	$(SERVER_OBJ_DIR)/game-server.o \
-	$(UTILS_OBJ_DIR)/communication.o \
-	$(SERVER_OBJ_DIR)/space_ship.o \
-	$(UTILS_OBJ_DIR)/Utils.o \
-	$(SERVER_OBJ_DIR)/space_aliens.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+#Game Server
+game-server: game-server.o communication.o space_ship.o Utils.o space_aliens.o space.pb-c.c
+	gcc $(CFLAGS) space.pb-c.c $(SERVER_C)/game-server.o $(UTILS_C)/communication.o $(SERVER_C)/space_ship.o $(UTILS_C)/Utils.o $(SERVER_C)/space_aliens.o -o game-server -lzmq -lncurses -lprotobuf-c -lpthread
 
-astronaut-display-client: \
-    $(DISPLAY_CLIENT_OBJ)/astronaut-display-client.o \
-    $(UTILS_OBJ_DIR)/communication.o \
-    $(UTILS_OBJ_DIR)/Utils.o \
-    $(SERVER_OBJ_DIR)/space_ship.o \
-	$(DISPLAY_CLIENT_OBJ)/outer-space-display.o \
-	$(DISPLAY_CLIENT_OBJ)/astronaut-client.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+#Display Client
+display-client: astronaut-display-client.o communication.o Utils.o outer-space-display.o space.pb-c.c astronaut-client.o
+	gcc $(CFLAGS) space.pb-c.c $(DISP_CLIENT_C)/astronaut-display-client.o $(UTILS_C)/communication.o $(UTILS_C)/Utils.o $(SERVER_C)/space_ship.o $(DISP_CLIENT_C)/outer-space-display.o $(DISP_CLIENT_C)/astronaut-client.o -o astronaut-display-client -lzmq -lncurses -lprotobuf-c -lpthread
 
-# Pattern Rules for .o files
-$(SERVER_OBJ_DIR)/%.o: $(SERVER_DIR)/%.c
-	mkdir -p $(SERVER_OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+#Protobuf
+proto: space.proto
+	protoc-c --python_out=. space.proto
 
-$(UTILS_OBJ_DIR)/%.o: $(UTILS_DIR)/%.c
-	mkdir -p $(UTILS_OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+#Compile
+astronaut-client.o: $(DISP_CLIENT)/astronaut-client.c $(UTILS)/remote-char.h $(UTILS)/communication.h $(UTILS)/Utils.h
+	gcc $(CFLAGS) -c $(DISP_CLIENT)/astronaut-client.c -o $(DISP_CLIENT)/Compiled/astronaut-client.o
 
-$(DISPLAY_CLIENT_OBJ)/%.o: $(DISPLAY_CLIENT_DIR)/%.c
-	mkdir -p $(DISPLAY_CLIENT_OBJ)
-	$(CC) $(CFLAGS) -c $< -o $@
+astronaut-display-client.o: $(DISP_CLIENT)/astronaut-display-client.c $(DISP_CLIENT)/astronaut-display-client.h $(UTILS)/remote-char.h $(UTILS)/communication.h $(UTILS)/Utils.h
+	gcc $(CFLAGS) -c $(DISP_CLIENT)/astronaut-display-client.c -o $(DISP_CLIENT)/Compiled/astronaut-display-client.o
 
-# Clean Target
+outer-space-display.o: $(DISP_CLIENT)/outer-space-display.c $(DISP_CLIENT)/outer-space-display.h $(UTILS)/remote-char.h
+	gcc $(CFLAGS) -c $(DISP_CLIENT)/outer-space-display.c -o $(DISP_CLIENT)/Compiled/outer-space-display.o
+
+game-server.o: $(SERVER)/game-server.c $(SERVER)/game-server.h $(UTILS)/remote-char.h $(UTILS)/communication.h $(SERVER)/space_ship.h $(UTILS)/Utils.h $(SERVER)/space_aliens.h
+	gcc $(CFLAGS) -c $(SERVER)/game-server.c -o $(SERVER)/Compiled/game-server.o
+
+space_aliens.o: $(SERVER)/space_aliens.c $(SERVER)/space_aliens.h $(UTILS)/remote-char.h $(UTILS)/Utils.h
+	gcc $(CFLAGS) -c $(SERVER)/space_aliens.c -o $(SERVER)/Compiled/space_aliens.o
+
+space_ship.o: $(SERVER)/space_ship.c $(SERVER)/space_ship.h $(UTILS)/remote-char.h $(UTILS)/Utils.h
+	gcc $(CFLAGS) -c $(SERVER)/space_ship.c -o $(SERVER)/Compiled/space_ship.o
+
+communication.o: $(UTILS)/communication.c $(UTILS)/communication.h $(UTILS)/remote-char.h space.pb-c.c
+	gcc $(CFLAGS) -c $(UTILS)/communication.c -o $(UTILS)/Compiled/communication.o -lprotobuf-c
+
+Utils.o: $(UTILS)/Utils.c $(UTILS)/Utils.h $(UTILS)/remote-char.h
+	gcc $(CFLAGS) -c $(UTILS)/Utils.c -o $(UTILS)/Compiled/Utils.o
+
 clean:
-	rm -f \
-	$(SERVER_OBJ_DIR)/*.o \
-	$(UTILS_OBJ_DIR)/*.o \
-	$(DISPLAY_CLIENT_OBJ)/*.o \
-	game-server \
-	astronaut-display-client
+	rm -f */Compiled/*.o game-server game-server astronaut-display-client

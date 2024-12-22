@@ -6,7 +6,7 @@ void display(long int *disconnect)
     WINDOW *space, *score_board, *numbers;
     all_ships_t all_ships;
 
-    char topic[20] = "Display";
+    char topic[7] = "Display";
     initialize_connection_sub(&context, &subscriber, topic);
 
     initialize_window(&space, &score_board, &numbers);

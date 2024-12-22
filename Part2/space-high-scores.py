@@ -21,11 +21,10 @@ def main():
 
         # Update local scoreboard
         changed = False
-        for entry in update.scores:
-            old_score = scoreboard.get(entry.astronaut, -1)
-            if entry.points != old_score:
-                scoreboard[entry.astronaut] = entry.points
-                changed = True
+        old_score = scoreboard.get(update.astronaut, -1)
+        if update.points != old_score:
+            scoreboard[update.astronaut] = update.points
+            changed = True
 
         # Display scores if changed
         if changed:
