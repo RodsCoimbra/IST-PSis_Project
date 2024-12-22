@@ -6,15 +6,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <zmq.h>
+#include <stdint.h>
 #include <assert.h>
 #include <time.h>
+#include <pthread.h>
 #include "../Utils/remote-char.h"
 #include "../Utils/communication.h"
 #include "../Utils/Utils.h"
 #include "space_ship.h"
 #include "space_aliens.h"
 
-void run_aliens(int encryption);
+void *run_aliens(void *encryption);
 
 void run_players(int encryption);
 

@@ -7,6 +7,12 @@
  */
 int main()
 {
+    display();
+    return 0;
+}
+
+void display()
+{
     void *context, *subscriber;
     WINDOW *space, *score_board;
     all_ships_t all_ships;
@@ -31,7 +37,6 @@ int main()
 
     zmq_close(subscriber);
     zmq_ctx_destroy(context);
-    return 0;
 }
 
 /**

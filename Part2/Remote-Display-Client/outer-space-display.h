@@ -8,6 +8,8 @@
 #include "../Server/space_ship.h"
 #include "../Server/space_aliens.h"
 
+void display();
+
 void receive_ships(void *subscriber, all_ships_t *all_ships);
 
 void erase_old_data(WINDOW *space, all_ships_t all_ships);

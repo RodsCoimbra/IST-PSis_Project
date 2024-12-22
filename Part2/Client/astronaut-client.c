@@ -7,6 +7,12 @@
  */
 int main()
 {
+    client(NULL);
+    return 0;
+}
+
+void *client(void *arg)
+{
     remote_char_t m;
     int valid_action;
 
@@ -21,7 +27,7 @@ int main()
     if (m.ship == 0)
     {
         printf("Server is full\n");
-        return 0;
+        return NULL;
     }
 
     initialize_ncurses();
@@ -43,14 +49,14 @@ int main()
 
     printf("Disconnected ship %c\n", m.ship);
     printf("Final Pontuation: %d\n", m.points);
-    return 0;
+    return NULL;
 }
 
 /**
  * @brief Receives the key pressed by the user and sets the action of the astronaut.
- * 
+ *
  * @param m Holds the astronaut message for the server.
- * 
+ *
  * @return Returns 1 if the key pressed is valid, 0 otherwise.
  */
 int execute_action(remote_char_t *m)

@@ -11,4 +11,6 @@
 #include "../Utils/communication.h"
 #include "../Utils/Utils.h"
 
+void *client(void *arg);
+
 int execute_action(remote_char_t *);

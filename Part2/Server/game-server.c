@@ -1,5 +1,8 @@
 #include "game-server.h"
 
+void *context;
+void *lock;
+
 int main()
 {
     run_game();
@@ -11,22 +14,12 @@ int main()
  */
 void run_game()
 {
-    pid_t pid;
+    pthread_t aliens_thread;
     int encryption = random();
-    pid = fork(); // Create a new process
-    if (pid < 0)
-    {
-        perror("fork failed");
-        return;
-    }
-    if (pid == 0) // Child process
-    {
-        run_aliens(encryption);
-    }
-    else // Parent process
-    {
-        run_players(encryption);
-    }
+
+    pthread_create(&aliens_thread, NULL, run_aliens, &encryption);
+
+    run_players(encryption);
 }
 
 /**
@@ -111,17 +104,20 @@ void run_players(int encryption)
  *
  * @param encryption The encryption key used for all the aliens' messages.
  */
-void run_aliens(int encryption)
+void *run_aliens(void *enc_key)
 {
     void *context, *requester;
     remote_char_t alien_msg = {};
     int alive[N_ALIENS], game_end = 1;
+    int encryption = *(int *)enc_key;
+
     for (int i = 0; i < N_ALIENS; i++)
     {
         alive[i] = 1;
     }
 
     initialize_connection_client(&context, &requester);
+
     alien_msg.encryption = encryption;
     alien_msg.action = Alien_movement;
     while (1)
@@ -155,4 +151,5 @@ void run_aliens(int encryption)
     }
     zmq_close(requester);
     zmq_ctx_destroy(context);
+    pthread_exit(NULL);
 }
