@@ -1,16 +1,16 @@
 #include "outer-space-display.h"
 
-void display(long int* disconnect)
+void display(long int *disconnect)
 {
     void *subscriber;
-    WINDOW *space, *score_board;
+    WINDOW *space, *score_board, *numbers;
     all_ships_t all_ships;
 
     char topic[20] = "Display";
     initialize_connection_sub(&context, &subscriber, topic);
 
-    initialize_window(&space, &score_board);
-    
+    initialize_window(&space, &score_board, &numbers);
+
     recv_subscription_TCP(subscriber, &all_ships);
     long int disconnect_local = 0;
     while (1)
@@ -18,7 +18,7 @@ void display(long int* disconnect)
         pthread_mutex_lock(&lock);
         disconnect_local = *disconnect;
         pthread_mutex_unlock(&lock);
-        
+
         if (disconnect_local)
             break;
 
@@ -26,7 +26,9 @@ void display(long int* disconnect)
 
         recv_subscription_TCP(subscriber, &all_ships);
 
-        display_new_data(space, all_ships, score_board);
+        update_numbers_boxs(numbers, space, score_board);
+
+        display_new_data(space, all_ships, score_board, numbers);
     }
     zmq_close(subscriber);
 }
@@ -56,7 +58,7 @@ void erase_old_data(WINDOW *space, all_ships_t all_ships)
  * @param all_ships all_ships_t struct with the data from all ships and aliens
  * @param score_board WINDOW pointer to the score board window
  */
-void display_new_data(WINDOW *space, all_ships_t all_ships, WINDOW *score_board)
+void display_new_data(WINDOW *space, all_ships_t all_ships, WINDOW *score_board, WINDOW *numbers)
 {
     // Display aliens
     int game_end = 1;
@@ -95,6 +97,7 @@ void display_new_data(WINDOW *space, all_ships_t all_ships, WINDOW *score_board)
     update_score_board(&score_board, all_ships.ships);
     wrefresh(space);
     wrefresh(score_board);
+    wrefresh(numbers);
 }
 
 /**

@@ -30,7 +30,7 @@ void run_game()
  */
 void run_players(int encryption)
 {
-    WINDOW *space, *score_board;
+    WINDOW *space, *score_board, *numbers;
     void *context, *responder, *publisher;
     all_ships_t all_ships;
     for (int i = 0; i < N_SHIPS; i++)
@@ -42,7 +42,7 @@ void run_players(int encryption)
 
     initialize_ncurses();
 
-    initialize_window(&space, &score_board);
+    initialize_window(&space, &score_board, &numbers);
 
     initialize_aliens(all_ships.aliens, space, encryption);
 

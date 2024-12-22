@@ -1,10 +1,11 @@
 #include "astronaut-display-client.h"
 
-void * context;
+void *context;
 pthread_mutex_t lock;
 
 int main()
 {
+    void *msg;
     pthread_t joystick_thread;
     long int disconnect = 0;
     context = zmq_ctx_new();
@@ -19,13 +20,18 @@ int main()
     pthread_create(&joystick_thread, NULL, joystick, &disconnect);
 
     display(&disconnect);
-    void *msg;
+
     pthread_join(joystick_thread, &msg);
+
     endwin();
+
     printf("Disconnected ship %c\n", ((remote_char_t *)msg)->ship);
     printf("Final Pontuation: %d\n", ((remote_char_t *)msg)->points);
+
     free(msg);
+
     pthread_mutex_destroy(&lock);
+
     zmq_ctx_destroy(context);
 
     return 0;

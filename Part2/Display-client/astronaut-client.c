@@ -1,7 +1,5 @@
 #include "astronaut-client.h"
 
-
-
 void *joystick(void *arg)
 {
     remote_char_t *m = malloc(sizeof(remote_char_t));
@@ -18,10 +16,10 @@ void *joystick(void *arg)
 
     if (m->ship == 0)
     {
-        //mvprintw(0, 0, "Server is full");
         pthread_mutex_lock(&lock);
         *disconnect = 1;
         pthread_mutex_unlock(&lock);
+
         pthread_exit(NULL);
     }
 
@@ -32,15 +30,17 @@ void *joystick(void *arg)
         {
             send_TCP(requester, m);
             recv_TCP(requester, m);
-            //mvprintw(0, 0, "Ship %c with pontuation: %d", m.ship, m.points);
         }
-        //refresh(); /* Print it on to the real screen */
+        // refresh(); /* Print it on to the real screen */
     } while (m->action != Astronaut_disconnect);
+
     pthread_mutex_lock(&lock);
     *disconnect = 1;
     pthread_mutex_unlock(&lock);
+
     zmq_close(requester);
-    pthread_exit((void*) m);
+
+    pthread_exit((void *)m);
 }
 
 /**
