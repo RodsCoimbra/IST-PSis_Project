@@ -1,3 +1,4 @@
+# The makefile was improved in readability with the help of ChatGPT
 CFLAGS = -g -Wall
 
 # Directories

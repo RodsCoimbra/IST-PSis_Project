@@ -16,6 +16,7 @@ PROTOBUF_C__BEGIN_DECLS
 
 
 typedef struct _ScoreUpdate ScoreUpdate;
+typedef struct _ScoreBoard ScoreBoard;
 
 
 /* --- enums --- */
@@ -32,6 +33,17 @@ struct  _ScoreUpdate
 #define SCORE_UPDATE__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&score_update__descriptor) \
     , 0, 0 }
+
+
+struct  _ScoreBoard
+{
+  ProtobufCMessage base;
+  size_t n_scores;
+  ScoreUpdate **scores;
+};
+#define SCORE_BOARD__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&score_board__descriptor) \
+    , 0,NULL }
 
 
 /* ScoreUpdate methods */
@@ -53,10 +65,32 @@ ScoreUpdate *
 void   score_update__free_unpacked
                      (ScoreUpdate *message,
                       ProtobufCAllocator *allocator);
+/* ScoreBoard methods */
+void   score_board__init
+                     (ScoreBoard         *message);
+size_t score_board__get_packed_size
+                     (const ScoreBoard   *message);
+size_t score_board__pack
+                     (const ScoreBoard   *message,
+                      uint8_t             *out);
+size_t score_board__pack_to_buffer
+                     (const ScoreBoard   *message,
+                      ProtobufCBuffer     *buffer);
+ScoreBoard *
+       score_board__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   score_board__free_unpacked
+                     (ScoreBoard *message,
+                      ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
 typedef void (*ScoreUpdate_Closure)
                  (const ScoreUpdate *message,
+                  void *closure_data);
+typedef void (*ScoreBoard_Closure)
+                 (const ScoreBoard *message,
                   void *closure_data);
 
 /* --- services --- */
@@ -65,6 +99,7 @@ typedef void (*ScoreUpdate_Closure)
 /* --- descriptors --- */
 
 extern const ProtobufCMessageDescriptor score_update__descriptor;
+extern const ProtobufCMessageDescriptor score_board__descriptor;
 
 PROTOBUF_C__END_DECLS
 

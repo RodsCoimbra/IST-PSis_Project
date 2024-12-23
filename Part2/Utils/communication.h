@@ -24,4 +24,6 @@ void recv_TCP(void *, remote_char_t *);
 
 void publish_display_data(void *publisher, all_ships_t *all_ships);
 
+void send_scoreboard(void *publisher, const all_ships_t *all_ships);
+
 #endif

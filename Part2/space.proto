@@ -5,3 +5,7 @@ message ScoreUpdate {
     required int32 astronaut = 1;
     required int32  points   = 2;
 }
+
+message ScoreBoard {
+    repeated ScoreUpdate scores = 1;
+}

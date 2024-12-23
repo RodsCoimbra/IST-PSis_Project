@@ -109,7 +109,7 @@ void recv_subscription_TCP(void *subscriber, all_ships_t *all_data)
  */
 void publish_display_data(void *publisher, all_ships_t *all_ships)
 {
-    //TODO: MUDAR TODOS OS ZMQ_SEND PARA UMA FUNÇÃO
+    // TODO: MUDAR TODOS OS ZMQ_SEND PARA UMA FUNÇÃO
     if (zmq_send(publisher, "Display", 7, ZMQ_SNDMORE) == -1)
     {
         perror("zmq_send");
@@ -121,25 +121,50 @@ void publish_display_data(void *publisher, all_ships_t *all_ships)
         exit(1);
     }
 
+    send_scoreboard(publisher, all_ships);
+}
+
+void send_scoreboard(void *publisher, const all_ships_t *all_ships)
+{
+    ScoreBoard scoreboard = SCORE_BOARD__INIT;
+    scoreboard.scores = malloc(sizeof(ScoreUpdate *) * N_SHIPS);
+    scoreboard.n_scores = 0;
+
+    for (int i = 0; i < N_SHIPS; i++)
+    {
+        if (all_ships->ships[i].ship == 0)
+            continue;
+
+        scoreboard.scores[scoreboard.n_scores] = malloc(sizeof(ScoreUpdate));
+        score_update__init(scoreboard.scores[scoreboard.n_scores]);
+
+        // Copy data from all_ships
+        scoreboard.scores[scoreboard.n_scores]->astronaut = all_ships->ships[i].ship;
+        scoreboard.scores[scoreboard.n_scores]->points = all_ships->ships[i].points;
+        scoreboard.n_scores++;
+    }
+
+    // Pack once
+    size_t msg_len = score_board__get_packed_size(&scoreboard);
+    uint8_t *msg_buf = malloc(msg_len);
+    score_board__pack(&scoreboard, msg_buf);
+
     if (zmq_send(publisher, "Score", 5, ZMQ_SNDMORE) == -1)
     {
         perror("zmq_send");
         exit(1);
     }
-    // Send score board to protobuf
-    ScoreUpdate score_update = SCORE_UPDATE__INIT;
-    for (int i = 0; i < N_SHIPS; i++)
+
+    if (zmq_send(publisher, msg_buf, msg_len, 0) == -1)
     {
-        score_update.astronaut = all_ships->ships[i].ship;
-        score_update.points = all_ships->ships[i].points;
-        int msg_len = score_update__get_packed_size(&score_update);
-        char *msg_buf = malloc(msg_len);
-        score_update__pack(&score_update, msg_buf);
-        if (zmq_send(publisher, msg_buf, msg_len, 0) == -1)
-        {
-            perror("zmq_send");
-            exit(1);
-        }
-        free(msg_buf);
+        perror("zmq_send");
+        exit(1);
     }
+
+    // Cleanup
+    free(msg_buf);
+    for (size_t i = 0; i < scoreboard.n_scores; i++)
+        free(scoreboard.scores[i]);
+
+    free(scoreboard.scores);
 }

@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto2',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0bspace.proto\"0\n\x0bScoreUpdate\x12\x11\n\tastronaut\x18\x01 \x02(\x05\x12\x0e\n\x06points\x18\x02 \x02(\x05'
+  serialized_pb=b'\n\x0bspace.proto\"0\n\x0bScoreUpdate\x12\x11\n\tastronaut\x18\x01 \x02(\x05\x12\x0e\n\x06points\x18\x02 \x02(\x05\"*\n\nScoreBoard\x12\x1c\n\x06scores\x18\x01 \x03(\x0b\x32\x0c.ScoreUpdate'
 )
 
 
@@ -63,7 +63,41 @@ _SCOREUPDATE = _descriptor.Descriptor(
   serialized_end=63,
 )
 
+
+_SCOREBOARD = _descriptor.Descriptor(
+  name='ScoreBoard',
+  full_name='ScoreBoard',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='scores', full_name='ScoreBoard.scores', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto2',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=65,
+  serialized_end=107,
+)
+
+_SCOREBOARD.fields_by_name['scores'].message_type = _SCOREUPDATE
 DESCRIPTOR.message_types_by_name['ScoreUpdate'] = _SCOREUPDATE
+DESCRIPTOR.message_types_by_name['ScoreBoard'] = _SCOREBOARD
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 ScoreUpdate = _reflection.GeneratedProtocolMessageType('ScoreUpdate', (_message.Message,), {
@@ -72,6 +106,13 @@ ScoreUpdate = _reflection.GeneratedProtocolMessageType('ScoreUpdate', (_message.
   # @@protoc_insertion_point(class_scope:ScoreUpdate)
   })
 _sym_db.RegisterMessage(ScoreUpdate)
+
+ScoreBoard = _reflection.GeneratedProtocolMessageType('ScoreBoard', (_message.Message,), {
+  'DESCRIPTOR' : _SCOREBOARD,
+  '__module__' : 'space_pb2'
+  # @@protoc_insertion_point(class_scope:ScoreBoard)
+  })
+_sym_db.RegisterMessage(ScoreBoard)
 
 
 # @@protoc_insertion_point(module_scope)
