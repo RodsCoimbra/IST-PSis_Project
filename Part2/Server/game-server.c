@@ -2,6 +2,7 @@
 
 void *context;
 pthread_mutex_t lock_space;
+pthread_mutex_t lock_aliens;
 
 int main()
 {
@@ -11,9 +12,16 @@ int main()
         return 0;
     }
 
+    if (pthread_mutex_init(&lock_aliens, NULL) != 0)
+    {
+        printf("Mutex has failed\n");
+        return 0;
+    }
+
     run_game();
 
     pthread_mutex_destroy(&lock_space);
+    pthread_mutex_destroy(&lock_aliens);
 
     return 0;
 }
@@ -23,12 +31,26 @@ int main()
  */
 void run_game()
 {
+    WINDOW *space, *score_board, *numbers;
     pthread_t aliens_thread;
-    int encryption = random();
+    all_ships_t all_ships;
+    all_ships.ships = (ship_info_t *)malloc(N_SHIPS * sizeof(ship_info_t));
+    all_ships.aliens = (alien_info_t *)malloc(N_ALIENS * sizeof(alien_info_t));
 
-    pthread_create(&aliens_thread, NULL, run_aliens, &encryption);
+    initialize_aliens(all_ships.aliens);
 
-    run_players(encryption);
+    initialize_ships(all_ships.ships);
+
+    initialize_ncurses();
+
+    initialize_window(&space, &score_board, &numbers);
+
+    run_alien_args *args = (run_alien_args*) malloc(sizeof(run_alien_args));
+    args->aliens = all_ships.aliens;
+    args->space = space;
+    pthread_create(&aliens_thread, NULL, run_aliens, args);
+
+    run_players(all_ships, space, score_board);
 }
 
 /**
@@ -37,23 +59,12 @@ void run_game()
  *
  * @param encryption The encryption key used for all the aliens' messages.
  */
-void run_players(int encryption)
+void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board)
 {
-    WINDOW *space, *score_board, *numbers;
-    void *context, *responder, *publisher;
-    all_ships_t all_ships;
-    for (int i = 0; i < N_SHIPS; i++)
-    {
-        all_ships.ships[i].ship = 0;
-    }
+    
+    void *responder, *publisher;
 
     initialize_connection_server(&context, &responder, &publisher);
-
-    initialize_ncurses();
-
-    initialize_window(&space, &score_board, &numbers);
-
-    initialize_aliens(all_ships.aliens, space, encryption);
 
     remote_char_t m = {};
     int game_end = 0;
@@ -61,7 +72,7 @@ void run_players(int encryption)
     {
         recv_TCP(responder, &m); // Receive message from client or alien
         // Check if is the correct client or alien sending the message
-        if (!check_encryption(all_ships, m))
+        if (!check_encryption(all_ships.ships, m))
         {
             send_TCP(responder, &m);
             continue;
@@ -84,13 +95,7 @@ void run_players(int encryption)
         case Astronaut_disconnect:
             astronaut_disconnect(all_ships.ships, &m, space, score_board);
             break;
-        case Alien_movement:
-            alien_movement(all_ships.aliens, &m, space);
-            break;
-        case Alien_end:
-            end_game_display(space, all_ships);
-            game_end = 1;
-            break;
+        // TODO: Implement the case for the end of the game
         default:
             break;
         }
@@ -98,12 +103,19 @@ void run_players(int encryption)
 
         // Publish the updated display data to the outer-display
         publish_display_data(publisher, &all_ships);
+
         pthread_mutex_lock(&lock_space);
         wrefresh(space);
         pthread_mutex_unlock(&lock_space);
+
         wrefresh(score_board);
     }
+
+    free(all_ships.ships);
+    free(all_ships.aliens);
+
     endwin();
+
     zmq_close(responder);
     zmq_close(publisher);
     zmq_ctx_destroy(context);
@@ -114,52 +126,31 @@ void run_players(int encryption)
  *
  * @param encryption The encryption key used for all the aliens' messages.
  */
-void *run_aliens(void *enc_key)
+void *run_aliens(void *args)
 {
-    void *context, *requester;
-    remote_char_t alien_msg = {};
-    int alive[N_ALIENS], game_end = 1;
-    int encryption = *(int *)enc_key;
-
-    for (int i = 0; i < N_ALIENS; i++)
-    {
-        alive[i] = 1;
-    }
-    context = zmq_ctx_new();
-    initialize_connection_client(&context, &requester);
-
-    alien_msg.encryption = encryption;
-    alien_msg.action = Alien_movement;
+    run_alien_args *alien_arg = (run_alien_args *)args;
+    alien_info_t *alien = alien_arg->aliens;
+    int alive, game_end;
     while (1)
     {
         game_end = 1;
         for (int i = 0; i < N_ALIENS; i++)
         {
-            if (alive[i])
+            pthread_mutex_lock(&lock_aliens);
+            alive = alien[i].alive;
+            pthread_mutex_unlock(&lock_aliens);
+
+            if (alive)
             {
                 game_end = 0;
-                alien_msg.direction = random_direction();
-                alien_msg.points = i;
-                alien_msg.ship = 1;
-
-                send_TCP(requester, &alien_msg);
-
-                recv_TCP(requester, &alien_msg);
-
-                if (alien_msg.ship == 0) // if alien_msg.ship == 0, the alien was killed
-                    alive[i] = 0;
+                alien_movement(&(alien[i]), alien_arg->space, random_direction());
             }
         }
-        sleep(1);
         if (game_end)
-        {
-            alien_msg.action = Alien_end; // Send message to the server to end the game if all aliens are dead
-            send_TCP(requester, &alien_msg);
-            recv_TCP(requester, &alien_msg);
             break;
-        }
+
+        sleep(1);
     }
-    zmq_close(requester);
-    zmq_ctx_destroy(context);
+    free(args);
     pthread_exit(NULL);
 }

@@ -49,7 +49,6 @@ typedef enum msg_type_t
     Astronaut_movement,
     Astronaut_zap,
     Astronaut_disconnect,
-    Alien_movement,
     Alien_end
 } msg_type_t;
 
@@ -75,6 +74,7 @@ typedef struct ship_info_t
     movement_t move_type;
     time_t timeouts[2];
     zap_display_t zap;
+    position_info_t zap_position;
     int encryption;
 } ship_info_t;
 
@@ -82,7 +82,6 @@ typedef struct alien_info_t
 {
     position_info_t position;
     int alive;
-    int encryption;
 } alien_info_t;
 
 typedef enum status_t
@@ -93,8 +92,8 @@ typedef enum status_t
 
 typedef struct all_ships_t
 {
-    ship_info_t ships[N_SHIPS];
-    alien_info_t aliens[N_ALIENS];
+    ship_info_t* ships;
+    alien_info_t* aliens;
 } all_ships_t;
 
 #endif

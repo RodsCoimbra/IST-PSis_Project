@@ -81,11 +81,11 @@ void display_new_data(WINDOW *space, all_ships_t all_ships, WINDOW *score_board,
             switch (all_ships.ships[i].zap)
             {
             case DRAW_ZAP:
-                draw_zap(space, all_ships.ships[i].position, all_ships.ships[i].move_type, all_ships.ships);
+                draw_zap(space, all_ships.ships[i].zap_position, all_ships.ships[i].move_type, all_ships.ships);
                 break;
 
             case ERASE_ZAP:
-                erase_zap(space, all_ships.ships[i].position, all_ships.ships[i].move_type, all_ships.ships);
+                erase_zap(space, all_ships.ships[i].zap_position, all_ships.ships[i].move_type, all_ships.ships);
                 break;
 
             default:

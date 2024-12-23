@@ -16,9 +16,16 @@
 #include "space_ship.h"
 #include "space_aliens.h"
 
-void *run_aliens(void *encryption);
+typedef struct
+{
+    alien_info_t* aliens;
+    WINDOW* space;
+} run_alien_args;
 
-void run_players(int encryption);
+
+void *run_aliens(void *);
+
+void run_players(all_ships_t, WINDOW *, WINDOW *);
 
 void run_game();
 

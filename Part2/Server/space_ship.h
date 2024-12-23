@@ -11,6 +11,7 @@
 typedef struct alien_info_t alien_info_t;
 
 extern pthread_mutex_t lock_space;
+extern pthread_mutex_t lock_aliens;
 
 typedef struct {
     WINDOW *space;
@@ -18,7 +19,7 @@ typedef struct {
     ship_info_t *current_ship;
     void *publisher;
     movement_t direction_zap; 
-} display_zap_t;
+} thread_display_zap_t;
 
 ship_info_t *find_ship_info(ship_info_t[], int);
 
@@ -27,8 +28,6 @@ int create_new_ship(ship_info_t[]);
 void initialize_ship(ship_info_t *, position_info_t, char);
 
 void new_position(ship_info_t *, direction_t);
-
-void update_score_board(WINDOW **, ship_info_t[]);
 
 int IsStunned(ship_info_t *);
 
@@ -46,10 +45,6 @@ void hozirontal_zap(ship_info_t *, all_ships_t* , WINDOW *, int, void *);
 
 void vertical_zap(ship_info_t *, all_ships_t* , WINDOW *, int , void *);
 
-void draw_horizontal(WINDOW *, position_info_t, ship_info_t* , char);
-
-int cmp_position(position_info_t a, position_info_t b);
-
-void draw_vertical(WINDOW *, position_info_t, ship_info_t*, char);
+void initialize_ships(ship_info_t *);
 
 #endif

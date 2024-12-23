@@ -22,7 +22,7 @@ def main():
             print("\033c", end="")  # clear screen
             print("=== Current Astronaut Scores ===")
             for entry in scoreboard.scores:
-                print(f"{entry.astronaut} : {entry.points}")
+                print(f"{chr(entry.astronaut)} : {entry.points}")
 
 
 if __name__ == "__main__":

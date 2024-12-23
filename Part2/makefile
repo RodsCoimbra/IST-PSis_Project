@@ -1,4 +1,3 @@
-# TODO: The makefile was improved in readability with the help of ChatGPT
 CFLAGS = -g -Wall
 
 # Directories
@@ -19,11 +18,12 @@ game-server: game-server.o communication.o space_ship.o Utils.o space_aliens.o s
 
 #Display Client
 display-client: astronaut-display-client.o communication.o Utils.o outer-space-display.o space.pb-c.c astronaut-client.o
-	gcc $(CFLAGS) space.pb-c.c $(DISP_CLIENT_C)/astronaut-display-client.o $(UTILS_C)/communication.o $(UTILS_C)/Utils.o $(SERVER_C)/space_ship.o $(DISP_CLIENT_C)/outer-space-display.o $(DISP_CLIENT_C)/astronaut-client.o -o astronaut-display-client -lzmq -lncurses -lprotobuf-c -lpthread
+	gcc $(CFLAGS) space.pb-c.c $(DISP_CLIENT_C)/astronaut-display-client.o $(UTILS_C)/communication.o $(UTILS_C)/Utils.o $(DISP_CLIENT_C)/outer-space-display.o $(DISP_CLIENT_C)/astronaut-client.o -o astronaut-display-client -lzmq -lncurses -lprotobuf-c -lpthread
 
 #Protobuf
 proto: space.proto
 	protoc-c --python_out=. space.proto
+	protoc-c --c_out=. space.proto
 
 #Compile
 astronaut-client.o: $(DISP_CLIENT)/astronaut-client.c $(UTILS)/remote-char.h $(UTILS)/communication.h $(UTILS)/Utils.h
@@ -42,7 +42,7 @@ space_aliens.o: $(SERVER)/space_aliens.c $(SERVER)/space_aliens.h $(UTILS)/remot
 	gcc $(CFLAGS) -c $(SERVER)/space_aliens.c -o $(SERVER)/Compiled/space_aliens.o
 
 space_ship.o: $(SERVER)/space_ship.c $(SERVER)/space_ship.h $(UTILS)/remote-char.h $(UTILS)/Utils.h
-	gcc $(CFLAGS) -c $(SERVER)/space_ship.c -o $(SERVER)/Compiled/space_ship.o
+	gcc $(CFLAGS) -c $(SERVER)/space_ship.c -o $(SERVER)/Compiled/space_ship.o -lpthread
 
 communication.o: $(UTILS)/communication.c $(UTILS)/communication.h $(UTILS)/remote-char.h space.pb-c.c
 	gcc $(CFLAGS) -c $(UTILS)/communication.c -o $(UTILS)/Compiled/communication.o -lprotobuf-c

@@ -97,30 +97,7 @@ void new_position(ship_info_t *current_ship, direction_t direction)
     }
 }
 
-/**
- * @brief Update the score board with the current points of each ship
- *
- * @param score_board Pointer to the score board window
- * @param ship_data Array of ship data
- */
-void update_score_board(WINDOW **score_board, ship_info_t ship_data[])
-{
-    int score_pos = 3;
-    for (int i = 0; i < N_SHIPS; i++)
-    {
-        ship_info_t current_ship = ship_data[i];
-        if (current_ship.ship != 0) // if the ship is connected
-        {
-            wmove(*score_board, score_pos, 3);
-            wprintw(*score_board, "%c - %d", current_ship.ship, current_ship.points);
-            score_pos++;
-        }
-    }
 
-    // Clear the last entry, in case a ship was disconnected
-    wmove(*score_board, score_pos, 3);
-    wprintw(*score_board, "        ");
-}
 
 /**
  * @brief Check if the ship is stunned
@@ -284,87 +261,9 @@ void astronaut_disconnect(ship_info_t *ship_data, remote_char_t *m, WINDOW *spac
     update_score_board(&score_board, ship_data);
 }
 
-/**
- * @brief Draw the horizontal zap
- *
- * @param space Pointer to the game window
- * @param position Position of the zap
- * @param ship_data Array of ship data
- * @param symbol Symbol to draw
- */
-void draw_horizontal(WINDOW *space, position_info_t position, ship_info_t *ship_data, char symbol)
-{
-    int draw = 1;
-
-    for (position.x = 1; position.x < WINDOW_SIZE - 1; position.x++, draw = 1)
-    {
-        // check within the astronauts area to see if any of them are in the way of the zap
-        if (position.x < MIN_POS || position.x > MAX_POS)
-            for (int i = 0; i < N_SHIPS; i++)
-                if (ship_data[i].ship != 0 && cmp_position(ship_data[i].position, position))
-                {
-                    // if there is a connected ship in the position, do not draw over it
-                    draw = 0;
-                    break;
-                }
-        if (draw)
-        {
-            pthread_mutex_lock(&lock_space);
-            update_window_char(space, position, symbol);
-            pthread_mutex_unlock(&lock_space);
-        }
-    }
-}
-
-/**
- * @brief Compare two positions
- *
- * @param a First position
- * @param b Second position
- *
- * @return 1 if the positions are the same, 0 otherwise
- */
-int cmp_position(position_info_t a, position_info_t b)
-{
-    return a.x == b.x && a.y == b.y;
-}
-
-/**
- * @brief Draw the vertical zap
- *
- * @param space Pointer to the game window
- * @param position Position of the zap
- * @param ship_data Array of ship data
- * @param symbol Symbol to draw
- */
-void draw_vertical(WINDOW *space, position_info_t position, ship_info_t *ship_data, char symbol)
-{
-    int draw = 1;
-
-    for (position.y = 1; position.y < WINDOW_SIZE - 1; position.y++, draw = 1)
-    {
-        // check within the astronauts area to see if any of them are in the way of the zap
-        if (position.y < MIN_POS || position.y > MAX_POS)
-            for (int i = 0; i < N_SHIPS; i++)
-                if (ship_data[i].ship != 0 && cmp_position(ship_data[i].position, position))
-                {
-                    // if there is a connected ship in the position, do not draw over it
-                    draw = 0;
-                    break;
-                }
-
-        if (draw)
-        {
-            pthread_mutex_lock(&lock_space);
-            update_window_char(space, position, symbol);
-            pthread_mutex_unlock(&lock_space);
-        }
-    }
-}
-
 void *display_zap(void *arg)
 {
-    display_zap_t *display_zap_arg = (display_zap_t *)arg;
+    thread_display_zap_t *display_zap_arg = (thread_display_zap_t *)arg;
     display_zap_arg->current_ship->zap = DRAW_ZAP;
     void (*draw)(WINDOW *, position_info_t, ship_info_t *, char);
     switch (display_zap_arg->direction_zap)
@@ -379,20 +278,25 @@ void *display_zap(void *arg)
 
     default:
         pthread_exit(NULL);
-        ;
     }
-    position_info_t zap_position = display_zap_arg->current_ship->position;
+    display_zap_arg->current_ship->zap_position = display_zap_arg->current_ship->position;
+    
     // Draw the zap
-    draw(display_zap_arg->space, zap_position, display_zap_arg->all_ships->ships, '|');
+    draw(display_zap_arg->space, display_zap_arg->current_ship->zap_position, display_zap_arg->all_ships->ships, '|');
+    
     pthread_mutex_lock(&lock_space);
     wrefresh(display_zap_arg->space);
     pthread_mutex_unlock(&lock_space);
+    
     // send an update to the outer-display to display the zap
     publish_display_data(display_zap_arg->publisher, display_zap_arg->all_ships);
+    
     // zap is displayed for 0.5 seconds
     usleep(500000);
+    
     // Clear the zap
-    draw(display_zap_arg->space, zap_position, display_zap_arg->all_ships->ships, ' ');
+    draw(display_zap_arg->space, display_zap_arg->current_ship->zap_position, display_zap_arg->all_ships->ships, ' ');
+    
     // send an update to the outer-display to erase the zap
     display_zap_arg->current_ship->zap = ERASE_ZAP;
     publish_display_data(display_zap_arg->publisher, display_zap_arg->all_ships);
@@ -419,11 +323,13 @@ void hozirontal_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *s
     // Check for collisions with aliens
     for (int i = 0; i < N_ALIENS; i++)
     {
+        pthread_mutex_lock(&lock_aliens);
         if (all_ships->aliens[i].alive == 1 && all_ships->aliens[i].position.y == zap_position.y)
         {
             all_ships->aliens[i].alive = 0;
             current_ship->points++;
         }
+        pthread_mutex_unlock(&lock_aliens);
     }
 
     // Check for collisions with ships
@@ -435,7 +341,7 @@ void hozirontal_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *s
 
     pthread_t thread;
 
-    display_zap_t *display_zap_arg = (display_zap_t *)malloc(sizeof(display_zap_t));
+    thread_display_zap_t *display_zap_arg = (thread_display_zap_t *)malloc(sizeof(thread_display_zap_t));
     display_zap_arg->space = space;
     display_zap_arg->all_ships = all_ships;
     display_zap_arg->current_ship = current_ship;
@@ -461,11 +367,13 @@ void vertical_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *spa
     // Check for collisions with aliens
     for (int i = 0; i < N_ALIENS; i++)
     {
+        pthread_mutex_lock(&lock_aliens);
         if (all_ships->aliens[i].alive == 1 && all_ships->aliens[i].position.x == zap_position.x)
         {
             all_ships->aliens[i].alive = 0;
             current_ship->points++;
         }
+        pthread_mutex_unlock(&lock_aliens);
     }
 
     // Check for collisions with ships
@@ -478,7 +386,7 @@ void vertical_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *spa
 
     pthread_t thread;
 
-    display_zap_t *display_zap_arg = (display_zap_t *)malloc(sizeof(display_zap_t));
+    thread_display_zap_t *display_zap_arg = (thread_display_zap_t *)malloc(sizeof(thread_display_zap_t));
     display_zap_arg->space = space;
     display_zap_arg->all_ships = all_ships;
     display_zap_arg->current_ship = current_ship;
@@ -486,4 +394,10 @@ void vertical_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *spa
     display_zap_arg->direction_zap = VERTICAL;
 
     pthread_create(&thread, NULL, display_zap, (void *)display_zap_arg);
+}
+
+void initialize_ships(ship_info_t *ship_data)
+{
+    for (int i = 0; i < N_SHIPS; i++)
+        ship_data[i].ship = 0;
 }
