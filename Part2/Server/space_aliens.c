@@ -20,8 +20,10 @@ void initialize_aliens(alien_info_t *alien_data, WINDOW *space, int encryption)
         current_alien->encryption = encryption;
 
         // Update the window with the new alien
+        pthread_mutex_lock(&lock_space);
         update_window_char(space, current_alien->position, '*');
         wrefresh(space);
+        pthread_mutex_unlock(&lock_space);
     }
 }
 
@@ -42,7 +44,9 @@ void alien_movement(alien_info_t *alien_data, remote_char_t *m, WINDOW *space)
         return;
     }
     // Delete the current position of the alien
+    pthread_mutex_lock(&lock_space);
     update_window_char(space, current_alien->position, ' ');
+    pthread_mutex_unlock(&lock_space);
 
     switch (m->direction)
     {
@@ -66,7 +70,9 @@ void alien_movement(alien_info_t *alien_data, remote_char_t *m, WINDOW *space)
     clip_value(&current_alien->position.y, MIN_POS, MAX_POS);
 
     // Update the new position of the alien
+    pthread_mutex_lock(&lock_space);
     update_window_char(space, current_alien->position, '*');
+    pthread_mutex_unlock(&lock_space);
 }
 
 /**

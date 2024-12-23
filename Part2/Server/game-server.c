@@ -1,11 +1,20 @@
 #include "game-server.h"
 
 void *context;
-void *lock;
+pthread_mutex_t lock_space;
 
 int main()
 {
+    if (pthread_mutex_init(&lock_space, NULL) != 0)
+    {
+        printf("Mutex has failed\n");
+        return 0;
+    }
+
     run_game();
+
+    pthread_mutex_destroy(&lock_space);
+
     return 0;
 }
 
@@ -89,8 +98,9 @@ void run_players(int encryption)
 
         // Publish the updated display data to the outer-display
         publish_display_data(publisher, &all_ships);
-
+        pthread_mutex_lock(&lock_space);
         wrefresh(space);
+        pthread_mutex_unlock(&lock_space);
         wrefresh(score_board);
     }
     endwin();

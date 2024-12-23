@@ -3,6 +3,7 @@
 
 #include <ncurses.h>
 #include "remote-char.h"
+#include <pthread.h>
 
 void clip_value(int *, int, int);
 

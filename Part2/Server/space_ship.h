@@ -6,8 +6,19 @@
 #include "../Utils/Utils.h"
 #include <unistd.h>
 #include "../Utils/communication.h"
+#include <pthread.h>
 
 typedef struct alien_info_t alien_info_t;
+
+extern pthread_mutex_t lock_space;
+
+typedef struct {
+    WINDOW *space;
+    all_ships_t *all_ships;
+    ship_info_t *current_ship;
+    void *publisher;
+    movement_t direction_zap; 
+} display_zap_t;
 
 ship_info_t *find_ship_info(ship_info_t[], int);
 

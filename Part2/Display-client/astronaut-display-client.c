@@ -2,6 +2,7 @@
 
 void *context;
 pthread_mutex_t lock;
+pthread_mutex_t lock_space;
 
 int main()
 {
@@ -10,6 +11,12 @@ int main()
     long int disconnect = 0;
     context = zmq_ctx_new();
     if (pthread_mutex_init(&lock, NULL) != 0)
+    {
+        printf("Mutex has failed\n");
+        return 0;
+    }
+
+    if (pthread_mutex_init(&lock_space, NULL) != 0)
     {
         printf("Mutex has failed\n");
         return 0;
@@ -31,6 +38,7 @@ int main()
     free(msg);
 
     pthread_mutex_destroy(&lock);
+    pthread_mutex_destroy(&lock_space);
 
     zmq_ctx_destroy(context);
 

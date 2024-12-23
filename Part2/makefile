@@ -1,4 +1,4 @@
-# The makefile was improved in readability with the help of ChatGPT
+# TODO: The makefile was improved in readability with the help of ChatGPT
 CFLAGS = -g -Wall
 
 # Directories
@@ -48,7 +48,7 @@ communication.o: $(UTILS)/communication.c $(UTILS)/communication.h $(UTILS)/remo
 	gcc $(CFLAGS) -c $(UTILS)/communication.c -o $(UTILS)/Compiled/communication.o -lprotobuf-c
 
 Utils.o: $(UTILS)/Utils.c $(UTILS)/Utils.h $(UTILS)/remote-char.h
-	gcc $(CFLAGS) -c $(UTILS)/Utils.c -o $(UTILS)/Compiled/Utils.o
+	gcc $(CFLAGS) -c $(UTILS)/Utils.c -o $(UTILS)/Compiled/Utils.o -lpthread
 
 clean:
 	rm -f */Compiled/*.o game-server game-server astronaut-display-client
