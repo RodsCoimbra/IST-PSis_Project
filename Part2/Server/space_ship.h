@@ -18,7 +18,6 @@ typedef struct {
     all_ships_t *all_ships;
     ship_info_t *current_ship;
     void *publisher;
-    movement_t direction_zap; 
 } thread_display_zap_t;
 
 ship_info_t *find_ship_info(ship_info_t[], int);

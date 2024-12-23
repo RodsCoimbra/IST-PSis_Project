@@ -32,6 +32,7 @@ int main()
 void run_game()
 {
     WINDOW *space, *score_board, *numbers;
+    void *responder, *publisher;
     pthread_t aliens_thread;
     all_ships_t all_ships;
     all_ships.ships = (ship_info_t *)malloc(N_SHIPS * sizeof(ship_info_t));
@@ -41,16 +42,19 @@ void run_game()
 
     initialize_ships(all_ships.ships);
 
+    initialize_connection_server(&context, &responder, &publisher);
+
     initialize_ncurses();
 
     initialize_window(&space, &score_board, &numbers);
 
     run_alien_args *args = (run_alien_args*) malloc(sizeof(run_alien_args));
-    args->aliens = all_ships.aliens;
+    args->data = &all_ships;
     args->space = space;
+    args->publisher = publisher;
     pthread_create(&aliens_thread, NULL, run_aliens, args);
 
-    run_players(all_ships, space, score_board);
+    run_players(all_ships, space, score_board, publisher, responder);
 }
 
 /**
@@ -59,13 +63,8 @@ void run_game()
  *
  * @param encryption The encryption key used for all the aliens' messages.
  */
-void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board)
+void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void *publisher, void *responder)
 {
-    
-    void *responder, *publisher;
-
-    initialize_connection_server(&context, &responder, &publisher);
-
     remote_char_t m = {};
     int game_end = 0;
     while (1)
@@ -106,9 +105,9 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board)
 
         pthread_mutex_lock(&lock_space);
         wrefresh(space);
+        wrefresh(score_board);
         pthread_mutex_unlock(&lock_space);
 
-        wrefresh(score_board);
     }
 
     free(all_ships.ships);
@@ -129,7 +128,7 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board)
 void *run_aliens(void *args)
 {
     run_alien_args *alien_arg = (run_alien_args *)args;
-    alien_info_t *alien = alien_arg->aliens;
+    alien_info_t *alien = alien_arg->data->aliens;
     int alive, game_end;
     while (1)
     {
@@ -146,6 +145,7 @@ void *run_aliens(void *args)
                 alien_movement(&(alien[i]), alien_arg->space, random_direction());
             }
         }
+        publish_display_data(alien_arg->publisher, alien_arg->data);
         if (game_end)
             break;
 

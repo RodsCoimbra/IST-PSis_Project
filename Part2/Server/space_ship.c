@@ -266,14 +266,17 @@ void *display_zap(void *arg)
     thread_display_zap_t *display_zap_arg = (thread_display_zap_t *)arg;
     display_zap_arg->current_ship->zap = DRAW_ZAP;
     void (*draw)(WINDOW *, position_info_t, ship_info_t *, char);
-    switch (display_zap_arg->direction_zap)
+    char symbol;
+    switch (display_zap_arg->current_ship->move_type)
     {
     case HORIZONTAL:
         draw = draw_horizontal;
+        symbol = '|';
         break;
 
     case VERTICAL:
         draw = draw_vertical;
+        symbol = '-';
         break;
 
     default:
@@ -282,7 +285,7 @@ void *display_zap(void *arg)
     display_zap_arg->current_ship->zap_position = display_zap_arg->current_ship->position;
     
     // Draw the zap
-    draw(display_zap_arg->space, display_zap_arg->current_ship->zap_position, display_zap_arg->all_ships->ships, '|');
+    draw(display_zap_arg->space, display_zap_arg->current_ship->zap_position, display_zap_arg->all_ships->ships, symbol);
     
     pthread_mutex_lock(&lock_space);
     wrefresh(display_zap_arg->space);
@@ -300,6 +303,10 @@ void *display_zap(void *arg)
     // send an update to the outer-display to erase the zap
     display_zap_arg->current_ship->zap = ERASE_ZAP;
     publish_display_data(display_zap_arg->publisher, display_zap_arg->all_ships);
+
+    pthread_mutex_lock(&lock_space);
+    wrefresh(display_zap_arg->space);
+    pthread_mutex_unlock(&lock_space);
 
     display_zap_arg->current_ship->zap = NO_ZAP;
     free(display_zap_arg);
@@ -346,7 +353,6 @@ void hozirontal_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *s
     display_zap_arg->all_ships = all_ships;
     display_zap_arg->current_ship = current_ship;
     display_zap_arg->publisher = publisher;
-    display_zap_arg->direction_zap = HORIZONTAL;
 
     pthread_create(&thread, NULL, display_zap, (void *)display_zap_arg);
 }
@@ -391,7 +397,6 @@ void vertical_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *spa
     display_zap_arg->all_ships = all_ships;
     display_zap_arg->current_ship = current_ship;
     display_zap_arg->publisher = publisher;
-    display_zap_arg->direction_zap = VERTICAL;
 
     pthread_create(&thread, NULL, display_zap, (void *)display_zap_arg);
 }

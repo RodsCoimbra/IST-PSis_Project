@@ -18,14 +18,15 @@
 
 typedef struct
 {
-    alien_info_t* aliens;
+    all_ships_t* data;
     WINDOW* space;
+    void *publisher;
 } run_alien_args;
 
 
 void *run_aliens(void *);
 
-void run_players(all_ships_t, WINDOW *, WINDOW *);
+void run_players(all_ships_t, WINDOW *, WINDOW *, void *, void *);
 
 void run_game();
 
