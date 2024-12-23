@@ -94,11 +94,17 @@ void recv_subscription_TCP(void *subscriber, all_ships_t *all_data)
         exit(1);
     }
 
-    if (zmq_recv(subscriber, all_data, sizeof(all_ships_t), 0) == -1)
-    {
+    size_t msg_size = msg_ships_size + msg_aliens_size;
+    char *buffer = malloc(msg_size);
+
+    if (zmq_recv(subscriber, buffer, msg_size, 0) == -1) {
         perror("zmq_recv");
         exit(1);
     }
+
+    memcpy(all_data->ships, buffer, msg_ships_size);
+    memcpy(all_data->aliens, buffer + msg_ships_size, msg_aliens_size);
+    free(buffer);
 }
 
 /**
@@ -115,11 +121,18 @@ void publish_display_data(void *publisher, all_ships_t *all_ships)
         perror("zmq_send");
         exit(1);
     }
-    if (zmq_send(publisher, all_ships, sizeof(all_ships_t), 0) == -1)
+    size_t msg_size = msg_ships_size + msg_aliens_size;
+    char *buffer = malloc(msg_size);
+    memcpy(buffer, all_ships->ships, msg_ships_size);
+    memcpy(buffer + msg_ships_size, all_ships->aliens, msg_aliens_size);
+
+    if (zmq_send(publisher, buffer, msg_size, 0) == -1)
     {
         perror("zmq_send");
         exit(1);
     }
+
+    free(buffer);
 
     send_scoreboard(publisher, all_ships);
 }

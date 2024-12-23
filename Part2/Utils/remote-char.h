@@ -13,6 +13,9 @@
 #define RECHARGING_TIME 3
 #define STUN_TIME 10
 
+#define msg_ships_size  (N_SHIPS * sizeof(ship_info_t))
+#define msg_aliens_size (N_ALIENS * sizeof(alien_info_t))
+
 #define TCP_PATH_REP "tcp://*:5505"
 #define TCP_PATH_PUB "tcp://*:5506"
 #define TCP_PATH_REQ "tcp://localhost:5505"

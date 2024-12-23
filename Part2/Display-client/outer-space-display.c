@@ -6,6 +6,10 @@ void display(long int *disconnect)
     WINDOW *space, *score_board, *numbers;
     all_ships_t all_ships;
 
+    all_ships.ships = (ship_info_t *)malloc(msg_ships_size);
+    all_ships.aliens = (alien_info_t *)malloc(msg_aliens_size);
+
+
     char topic[7] = "Display";
     initialize_connection_sub(&context, &subscriber, topic);
 
@@ -31,6 +35,8 @@ void display(long int *disconnect)
         display_new_data(space, all_ships, score_board, numbers);
     }
     zmq_close(subscriber);
+    free(all_ships.ships);
+    free(all_ships.aliens);
 }
 
 /**

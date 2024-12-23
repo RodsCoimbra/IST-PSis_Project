@@ -44,7 +44,7 @@ space_aliens.o: $(SERVER)/space_aliens.c $(SERVER)/space_aliens.h $(UTILS)/remot
 space_ship.o: $(SERVER)/space_ship.c $(SERVER)/space_ship.h $(UTILS)/remote-char.h $(UTILS)/Utils.h
 	gcc $(CFLAGS) -c $(SERVER)/space_ship.c -o $(SERVER)/Compiled/space_ship.o -lpthread
 
-communication.o: $(UTILS)/communication.c $(UTILS)/communication.h $(UTILS)/remote-char.h space.pb-c.c
+communication.o: $(UTILS)/communication.c $(UTILS)/communication.h $(UTILS)/remote-char.h
 	gcc $(CFLAGS) -c $(UTILS)/communication.c -o $(UTILS)/Compiled/communication.o -lprotobuf-c
 
 Utils.o: $(UTILS)/Utils.c $(UTILS)/Utils.h $(UTILS)/remote-char.h
