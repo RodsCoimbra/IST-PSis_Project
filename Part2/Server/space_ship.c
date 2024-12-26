@@ -213,18 +213,21 @@ void astronaut_zap(all_ships_t *all_ships, remote_char_t *m, WINDOW *space, WIND
     if (current_ship == NULL || IsRecharging(current_ship, current_time))
         return;
 
-    // Update the recharging timeout
-    current_ship->timeouts[RECHARGING] = current_time;
 
     switch (current_ship->move_type)
     {
     case HORIZONTAL:
-        hozirontal_zap(current_ship, all_ships, space, current_time, publisher);
+        zap(current_ship, all_ships, space, current_time, publisher, get_position_y);
         break;
     case VERTICAL:
-        vertical_zap(current_ship, all_ships, space, current_time, publisher);
+        zap(current_ship, all_ships, space, current_time, publisher, get_position_x);
         break;
+    default:
+        return;
     }
+
+    // Update the recharging timeout
+    current_ship->timeouts[RECHARGING] = current_time;
 
     update_score_board(&score_board, all_ships->ships);
 
@@ -315,15 +318,16 @@ void *display_zap(void *arg)
 }
 
 /**
- * @brief Fire the horizontal zap and check for collisions
+ * @brief Fire the zap and check for collisions
  *
  * @param current_ship Pointer to the ship_info_t struct of the ship
  * @param all_ships Pointer to the all_ships_t struct with all the ship and alien data
  * @param space Pointer to the game window
  * @param current_time Current time
  * @param publisher Pointer to the publisher
+ * TODO
  */
-void hozirontal_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *space, int current_time, void *publisher)
+void zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *space, int current_time, void *publisher, int (*get_position)(position_info_t))
 {
     position_info_t zap_position = current_ship->position;
 
@@ -331,7 +335,7 @@ void hozirontal_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *s
     for (int i = 0; i < N_ALIENS; i++)
     {
         pthread_mutex_lock(&lock_aliens);
-        if (all_ships->aliens[i].alive == 1 && all_ships->aliens[i].position.y == zap_position.y)
+        if (all_ships->aliens[i].alive == 1 && get_position(all_ships->aliens[i].position) == get_position(zap_position))
         {
             all_ships->aliens[i].alive = 0;
             current_ship->points++;
@@ -342,7 +346,7 @@ void hozirontal_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *s
     // Check for collisions with ships
     for (int i = 0; i < N_SHIPS; i++)
     {
-        if (all_ships->ships[i].ship != 0 && all_ships->ships[i].position.y == zap_position.y && all_ships->ships[i].ship != current_ship->ship)
+        if (all_ships->ships[i].ship != 0 && get_position(all_ships->ships[i].position) == get_position(zap_position) && all_ships->ships[i].ship != current_ship->ship)
             all_ships->ships[i].timeouts[STUNNED] = current_time;
     }
 
@@ -357,48 +361,14 @@ void hozirontal_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *s
     pthread_create(&thread, NULL, display_zap, (void *)display_zap_arg);
 }
 
-/**
- * @brief Fire the vertical zap and check for collisions
- *
- * @param current_ship Pointer to the ship_info_t struct of the ship
- * @param all_ships Pointer to the all_ships_t struct with all the ship and alien data
- * @param space Pointer to the game window
- * @param current_time Current time
- * @param publisher Pointer to the publisher
- */
-void vertical_zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *space, int current_time, void *publisher)
+int get_position_x(position_info_t position)
 {
-    position_info_t zap_position = current_ship->position;
+    return position.x;
+}
 
-    // Check for collisions with aliens
-    for (int i = 0; i < N_ALIENS; i++)
-    {
-        pthread_mutex_lock(&lock_aliens);
-        if (all_ships->aliens[i].alive == 1 && all_ships->aliens[i].position.x == zap_position.x)
-        {
-            all_ships->aliens[i].alive = 0;
-            current_ship->points++;
-        }
-        pthread_mutex_unlock(&lock_aliens);
-    }
-
-    // Check for collisions with ships
-    for (int i = 0; i < N_SHIPS; i++)
-    {
-        if (all_ships->ships[i].ship != 0 && all_ships->ships[i].position.x == zap_position.x && all_ships->ships[i].ship != current_ship->ship)
-            all_ships->ships[i].timeouts[STUNNED] = current_time;
-    }
-    current_ship->zap = DRAW_ZAP;
-
-    pthread_t thread;
-
-    thread_display_zap_t *display_zap_arg = (thread_display_zap_t *)malloc(sizeof(thread_display_zap_t));
-    display_zap_arg->space = space;
-    display_zap_arg->all_ships = all_ships;
-    display_zap_arg->current_ship = current_ship;
-    display_zap_arg->publisher = publisher;
-
-    pthread_create(&thread, NULL, display_zap, (void *)display_zap_arg);
+int get_position_y(position_info_t position)
+{
+    return position.y;
 }
 
 void initialize_ships(ship_info_t *ship_data)

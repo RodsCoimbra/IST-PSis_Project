@@ -40,9 +40,11 @@ void astronaut_zap(all_ships_t *all_ships, remote_char_t *m, WINDOW *space, WIND
 
 void astronaut_disconnect(ship_info_t *, remote_char_t *, WINDOW *, WINDOW *);
 
-void hozirontal_zap(ship_info_t *, all_ships_t* , WINDOW *, int, void *);
+void zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *space, int current_time, void *publisher, int (*get_position)(position_info_t));
 
-void vertical_zap(ship_info_t *, all_ships_t* , WINDOW *, int , void *);
+int get_position_x(position_info_t position);
+
+int get_position_y(position_info_t position);
 
 void initialize_ships(ship_info_t *);
 
