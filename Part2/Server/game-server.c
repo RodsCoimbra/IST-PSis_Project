@@ -34,6 +34,7 @@ void run_game()
     WINDOW *space, *score_board, *numbers;
     void *responder, *publisher;
     pthread_t aliens_thread;
+    int game_end;
     all_ships_t all_ships;
     all_ships.ships = (ship_info_t *)malloc(N_SHIPS * sizeof(ship_info_t));
     all_ships.aliens = (alien_info_t *)malloc(N_ALIENS * sizeof(alien_info_t));
@@ -48,13 +49,15 @@ void run_game()
 
     initialize_window(&space, &score_board, &numbers);
 
-    run_alien_args *args = (run_alien_args*) malloc(sizeof(run_alien_args));
+    game_end = 0;
+    run_alien_args *args = (run_alien_args *)malloc(sizeof(run_alien_args));
+    args->game_end = &game_end;
     args->data = &all_ships;
     args->space = space;
     args->publisher = publisher;
     pthread_create(&aliens_thread, NULL, run_aliens, args);
 
-    run_players(all_ships, space, score_board, publisher, responder);
+    run_players(all_ships, space, score_board, publisher, responder, &game_end);
 }
 
 /**
@@ -62,14 +65,19 @@ void run_game()
  *   It then processes the messages and updates the display and outer displays accordingly.
  *
  * @param encryption The encryption key used for all the aliens' messages.
+ * TODO
  */
-void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void *publisher, void *responder)
+void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void *publisher, void *responder, int *game_end)
 {
     remote_char_t m = {};
-    int game_end = 0;
+    int ended; // TODO FINALIZE THE GAME FOR REAL
     while (1)
     {
         recv_TCP(responder, &m); // Receive message from client or alien
+
+        pthread_mutex_lock(&lock_aliens);
+        ended = *game_end;
+        pthread_mutex_unlock(&lock_aliens);
         // Check if is the correct client or alien sending the message
         if (!check_encryption(all_ships.ships, m))
         {
@@ -80,15 +88,15 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
         switch (m.action) // Perform the action based on the message received
         {
         case Astronaut_connect:
-            if (!game_end) // Block this action if the game has ended
+            if (!ended) // Block this action if the game has ended
                 astronaut_connect(all_ships.ships, &m, space, score_board);
             break;
         case Astronaut_movement:
-            if (!game_end) // Block this action if the game has ended
+            if (!ended) // Block this action if the game has ended
                 astronaut_movement(all_ships.ships, &m, space);
             break;
         case Astronaut_zap:
-            if (!game_end) // Block this action if the game has ended
+            if (!ended) // Block this action if the game has ended
                 astronaut_zap(&all_ships, &m, space, score_board, publisher);
             break;
         case Astronaut_disconnect:
@@ -107,7 +115,6 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
         wrefresh(space);
         wrefresh(score_board);
         pthread_mutex_unlock(&lock_space);
-
     }
 
     free(all_ships.ships);
@@ -129,10 +136,10 @@ void *run_aliens(void *args)
 {
     run_alien_args *alien_arg = (run_alien_args *)args;
     alien_info_t *alien = alien_arg->data->aliens;
-    int alive, game_end;
+    int alive, aliens_dead = 0;
     while (1)
     {
-        game_end = 1;
+        aliens_dead = 1;
         for (int i = 0; i < N_ALIENS; i++)
         {
             pthread_mutex_lock(&lock_aliens);
@@ -141,16 +148,19 @@ void *run_aliens(void *args)
 
             if (alive)
             {
-                game_end = 0;
+                aliens_dead = 0;
                 alien_movement(&(alien[i]), alien_arg->space, random_direction());
             }
         }
         publish_display_data(alien_arg->publisher, alien_arg->data);
-        if (game_end)
+        if (aliens_dead)
             break;
 
         sleep(1);
     }
+    pthread_mutex_lock(&lock_aliens);
+    *(alien_arg->game_end) = 1;
+    pthread_mutex_unlock(&lock_aliens);
     free(args);
     pthread_exit(NULL);
 }
