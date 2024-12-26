@@ -11,7 +11,7 @@
 extern void *context;
 extern pthread_mutex_t lock;
 
-void display(long int *game_end);
+void display(long int *disconnect, void *subscriber);
 
 void receive_ships(void *subscriber, all_ships_t *all_ships);
 

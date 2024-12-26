@@ -17,8 +17,8 @@ game-server: game-server.o communication.o space_ship.o Utils.o space_aliens.o s
 	gcc $(CFLAGS) space.pb-c.c $(SERVER_C)/game-server.o $(UTILS_C)/communication.o $(SERVER_C)/space_ship.o $(UTILS_C)/Utils.o $(SERVER_C)/space_aliens.o -o game-server -lzmq -lncurses -lprotobuf-c -lpthread
 
 #Display Client
-display-client: astronaut-display-client.o communication.o Utils.o outer-space-display.o space.pb-c.c astronaut-client.o
-	gcc $(CFLAGS) space.pb-c.c $(DISP_CLIENT_C)/astronaut-display-client.o $(UTILS_C)/communication.o $(UTILS_C)/Utils.o $(DISP_CLIENT_C)/outer-space-display.o $(DISP_CLIENT_C)/astronaut-client.o -o astronaut-display-client -lzmq -lncurses -lprotobuf-c -lpthread
+display-client: astronaut-display-client.o communication.o Utils.o outer-space-display.o space.pb-c.c astronaut-client.o space_ship.o
+	gcc $(CFLAGS) space.pb-c.c $(DISP_CLIENT_C)/astronaut-display-client.o $(UTILS_C)/communication.o $(UTILS_C)/Utils.o $(DISP_CLIENT_C)/outer-space-display.o $(DISP_CLIENT_C)/astronaut-client.o $(SERVER_C)/space_ship.o -o astronaut-display-client -lzmq -lncurses -lprotobuf-c -lpthread
 
 #Protobuf
 proto: space.proto
@@ -47,7 +47,7 @@ space_ship.o: $(SERVER)/space_ship.c $(SERVER)/space_ship.h $(UTILS)/remote-char
 communication.o: $(UTILS)/communication.c $(UTILS)/communication.h $(UTILS)/remote-char.h
 	gcc $(CFLAGS) -c $(UTILS)/communication.c -o $(UTILS)/Compiled/communication.o -lprotobuf-c
 
-Utils.o: $(UTILS)/Utils.c $(UTILS)/Utils.h $(UTILS)/remote-char.h
+Utils.o: $(UTILS)/Utils.c $(UTILS)/Utils.h $(UTILS)/remote-char.h 
 	gcc $(CFLAGS) -c $(UTILS)/Utils.c -o $(UTILS)/Compiled/Utils.o -lpthread
 
 clean:

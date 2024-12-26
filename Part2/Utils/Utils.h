@@ -3,6 +3,7 @@
 
 #include <ncurses.h>
 #include "remote-char.h"
+#include "../Server/space_ship.h"
 #include <pthread.h>
 
 extern pthread_mutex_t lock_space;

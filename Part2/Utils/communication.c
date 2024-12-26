@@ -7,7 +7,7 @@
  * @param responder Pointer to the zmq responder socket
  * @param publisher Pointer to the zmq publisher socket
  */
-void initialize_connection_server(void **context, void **responder, void **publisher, void **pusher)
+void initialize_connection_server(void **context, void **responder, void **publisher)
 {
     // Create new zmq context
     *context = zmq_ctx_new();
@@ -20,11 +20,7 @@ void initialize_connection_server(void **context, void **responder, void **publi
     // Initialize publisher socket
     *publisher = zmq_socket(*context, ZMQ_PUB);
     rc = zmq_bind(*publisher, TCP_PATH_PUB);
-    assert(rc == 0);
-
-    *pusher = zmq_socket(*context, ZMQ_PUSH);
-    rc = zmq_connect(*pusher, TCP_PATH_PUSH);
-    assert(rc == 0);    
+    assert(rc == 0);  
 }
 
 /**
@@ -46,11 +42,13 @@ void initialize_connection_client(void **context, void **requester)
  * @param subscriber Pointer to the zmq subscriber socket
  * @param topic Topic to subscribe
  */
-void initialize_connection_sub(void **context, void **subscriber, char *topic)
+void initialize_connection_sub(void **context, void **subscriber)
 {
+    char topic[] = "Display", topic2[] = "Disconn";
     *subscriber = zmq_socket(*context, ZMQ_SUB);
     zmq_connect(*subscriber, TCP_PATH_SUB);
     zmq_setsockopt(*subscriber, ZMQ_SUBSCRIBE, topic, strlen(topic));
+    zmq_setsockopt(*subscriber, ZMQ_SUBSCRIBE, topic2, strlen(topic2));
 }
 
 /**
@@ -89,7 +87,7 @@ void recv_TCP(void *responder, remote_char_t *m)
  * @param subscriber Pointer to the zmq subscriber socket
  * @param all_data all ships data
  */
-void recv_subscription_TCP(void *subscriber, all_ships_t *all_data)
+void recv_subscription_TCP(void *subscriber, all_ships_t *all_data, long int* game_end)
 {
     char topic[8];
     if (zmq_recv(subscriber, topic, 7, 0) == -1)
@@ -106,9 +104,19 @@ void recv_subscription_TCP(void *subscriber, all_ships_t *all_data)
         exit(1);
     }
 
-    memcpy(all_data->ships, buffer, msg_ships_size);
-    memcpy(all_data->aliens, buffer + msg_ships_size, msg_aliens_size);
+    if (strcmp(topic, "Display") == 0)
+    {
+        memcpy(all_data->ships, buffer, msg_ships_size);
+        memcpy(all_data->aliens, buffer + msg_ships_size, msg_aliens_size);
+    }
+    else if (strcmp(topic, "Disconn") == 0)
+    {
+       *game_end = 1;
+    }
     free(buffer);
+    
+
+    
 }
 
 /**
@@ -120,7 +128,7 @@ void recv_subscription_TCP(void *subscriber, all_ships_t *all_data)
 void publish_display_data(void *publisher, all_ships_t *all_ships)
 {
     // TODO: MUDAR TODOS OS ZMQ_SEND PARA UMA FUNÇÃO
-    if (zmq_send(publisher, "Display", 7, ZMQ_SNDMORE) == -1)
+    if (zmq_send(publisher, "Display", 8, ZMQ_SNDMORE) == -1)
     {
         perror("zmq_send");
         exit(1);
@@ -139,6 +147,25 @@ void publish_display_data(void *publisher, all_ships_t *all_ships)
     free(buffer);
 
     send_scoreboard(publisher, all_ships);
+}
+
+
+void publish_end_game(void *publisher)
+{
+    if (zmq_send(publisher, "Disconn", 8, ZMQ_SNDMORE) == -1)
+    {
+        perror("zmq_send");
+        exit(1);
+    }
+    size_t msg_size = msg_ships_size + msg_aliens_size;
+    char *buffer = malloc(msg_size);
+
+    if (zmq_send(publisher, buffer, msg_size, 0) == -1)
+    {
+        perror("zmq_send");
+        exit(1);
+    }
+    free(buffer);
 }
 
 void send_scoreboard(void *publisher, const all_ships_t *all_ships)

@@ -3,6 +3,8 @@
 void *joystick(void *arg)
 {
     remote_char_t *m = malloc(sizeof(remote_char_t));
+    m->points = 0;
+    m->ship = ' ';
     int valid_action;
     void *requester;
     long int *disconnect = (long int *)arg;
@@ -26,14 +28,16 @@ void *joystick(void *arg)
     do
     {
         valid_action = execute_action(m);
-        if (valid_action)
+        pthread_mutex_lock(&lock);
+        local_disconnect = *disconnect;
+        pthread_mutex_unlock(&lock);
+
+        if (valid_action && !local_disconnect)
         {
             send_TCP(requester, m);
             recv_TCP(requester, m);
         }
-        pthread_mutex_lock(&lock);
-        local_disconnect = *disconnect;
-        pthread_mutex_unlock(&lock);
+
     } while (m->action != Astronaut_disconnect && !local_disconnect);
 
     pthread_mutex_lock(&lock);
@@ -41,7 +45,6 @@ void *joystick(void *arg)
     pthread_mutex_unlock(&lock);
 
     zmq_close(requester);
-
     pthread_exit((void *)m);
 }
 

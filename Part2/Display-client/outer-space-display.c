@@ -1,21 +1,16 @@
 #include "outer-space-display.h"
 
-void display(long int *disconnect)
+void display(long int *disconnect, void* subscriber)
 {
-    void *subscriber;
     WINDOW *space, *score_board, *numbers;
     all_ships_t all_ships;
 
     all_ships.ships = (ship_info_t *)malloc(msg_ships_size);
     all_ships.aliens = (alien_info_t *)malloc(msg_aliens_size);
 
-
-    char topic[7] = "Display";
-    initialize_connection_sub(&context, &subscriber, topic);
-
     initialize_window(&space, &score_board, &numbers);
 
-    recv_subscription_TCP(subscriber, &all_ships);
+    recv_subscription_TCP(subscriber, &all_ships, disconnect);
     long int local_disconnect = 0;
     while (1)
     {
@@ -28,13 +23,12 @@ void display(long int *disconnect)
 
         erase_old_data(space, all_ships);
 
-        recv_subscription_TCP(subscriber, &all_ships);
+        recv_subscription_TCP(subscriber, &all_ships, disconnect);
 
         update_numbers_boxs(numbers, space, score_board);
 
         display_new_data(space, all_ships, score_board, numbers);
     }
-    zmq_close(subscriber);
     free(all_ships.ships);
     free(all_ships.aliens);
 }

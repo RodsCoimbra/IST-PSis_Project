@@ -104,6 +104,7 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
         recv_TCP(responder, &m); // Receive message from client
 
         // Check if is the correct client or alien sending the message
+        
         if (!check_encryption(all_ships.ships, m))
         {
             send_TCP(responder, &m);
@@ -126,7 +127,7 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
             break;
 
         case Server_disconnect:
-            //publish_end_game();
+            publish_end_game(publisher);
             pthread_mutex_lock(&lock_game_end);
             *game_end = 1;
             pthread_mutex_unlock(&lock_game_end);
