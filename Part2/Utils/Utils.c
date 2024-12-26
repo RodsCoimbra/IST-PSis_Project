@@ -228,3 +228,10 @@ int cmp_position(position_info_t a, position_info_t b)
 {
     return a.x == b.x && a.y == b.y;
 }
+
+void refresh_windows(WINDOW *space, WINDOW *score_board, WINDOW *numbers)
+{
+    wrefresh(space);
+    wrefresh(score_board);
+    wrefresh(numbers);
+}
