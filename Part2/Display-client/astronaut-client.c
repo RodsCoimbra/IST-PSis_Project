@@ -6,6 +6,7 @@ void *joystick(void *arg)
     int valid_action;
     void *requester;
     long int *disconnect = (long int *)arg;
+    long int local_disconnect = 0;
     initialize_connection_client(&context, &requester);
 
     m->action = Astronaut_connect;
@@ -30,7 +31,10 @@ void *joystick(void *arg)
             send_TCP(requester, m);
             recv_TCP(requester, m);
         }
-    } while (m->action != Astronaut_disconnect);
+        pthread_mutex_lock(&lock);
+        local_disconnect = *disconnect;
+        pthread_mutex_unlock(&lock);
+    } while (m->action != Astronaut_disconnect && !local_disconnect);
 
     pthread_mutex_lock(&lock);
     *disconnect = 1;

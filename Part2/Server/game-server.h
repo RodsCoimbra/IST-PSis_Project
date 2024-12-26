@@ -21,13 +21,15 @@ typedef struct
     all_ships_t* data;
     WINDOW* space;
     void *publisher;
-    int *game_end;  
+    long int *game_end;  
 } run_alien_args;
 
 
 void *run_aliens(void *);
 
-void run_players(all_ships_t , WINDOW *, WINDOW *, void *, void *, int *);
+void run_players(all_ships_t , WINDOW *, WINDOW *, void *, void *, long int *, void *);
+
+void *keyboard_handler(void *arg);
 
 void run_game();
 

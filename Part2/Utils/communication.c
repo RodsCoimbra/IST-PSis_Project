@@ -7,7 +7,7 @@
  * @param responder Pointer to the zmq responder socket
  * @param publisher Pointer to the zmq publisher socket
  */
-void initialize_connection_server(void **context, void **responder, void **publisher)
+void initialize_connection_server(void **context, void **responder, void **publisher, void **pusher)
 {
     // Create new zmq context
     *context = zmq_ctx_new();
@@ -21,6 +21,10 @@ void initialize_connection_server(void **context, void **responder, void **publi
     *publisher = zmq_socket(*context, ZMQ_PUB);
     rc = zmq_bind(*publisher, TCP_PATH_PUB);
     assert(rc == 0);
+
+    *pusher = zmq_socket(*context, ZMQ_PUSH);
+    rc = zmq_connect(*pusher, TCP_PATH_PUSH);
+    assert(rc == 0);    
 }
 
 /**

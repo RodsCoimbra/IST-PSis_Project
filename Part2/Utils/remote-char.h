@@ -9,7 +9,7 @@
 #define MID_POS WINDOW_SIZE / 2
 
 #define N_SHIPS 8
-#define N_ALIENS ((WINDOW_SIZE - 2) * (WINDOW_SIZE - 2) / 3)
+#define N_ALIENS 1 //((WINDOW_SIZE - 2) * (WINDOW_SIZE - 2) / 3)
 #define RECHARGING_TIME 3
 #define STUN_TIME 10
 
@@ -18,8 +18,10 @@
 
 #define TCP_PATH_REP "tcp://*:5505"
 #define TCP_PATH_PUB "tcp://*:5506"
+#define TCP_PATH_PULL "tcp://*:5507"
 #define TCP_PATH_REQ "tcp://localhost:5505"
 #define TCP_PATH_SUB "tcp://localhost:5506"
+#define TCP_PATH_PUSH "tcp://localhost:5507"
 #define KEY_SPACE 32
 #define KEY_q 113
 #define KEY_Q 81

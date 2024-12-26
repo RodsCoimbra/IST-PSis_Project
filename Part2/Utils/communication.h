@@ -10,7 +10,7 @@
 
 typedef struct all_ships_t all_ships_t;
 
-void initialize_connection_server(void **, void **, void **);
+void initialize_connection_server(void **, void **, void **, void **);
 
 void initialize_connection_client(void **, void **);
 

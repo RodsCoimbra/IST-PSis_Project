@@ -8,4 +8,6 @@
 #include "outer-space-display.h"
 #include "astronaut-client.h"
 
+void * disconnect_server(void *);
+
 #endif

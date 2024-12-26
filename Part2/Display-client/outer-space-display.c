@@ -16,14 +16,14 @@ void display(long int *disconnect)
     initialize_window(&space, &score_board, &numbers);
 
     recv_subscription_TCP(subscriber, &all_ships);
-    long int disconnect_local = 0;
+    long int local_disconnect = 0;
     while (1)
     {
         pthread_mutex_lock(&lock);
-        disconnect_local = *disconnect;
+        local_disconnect = *disconnect;
         pthread_mutex_unlock(&lock);
 
-        if (disconnect_local)
+        if (local_disconnect)
             break;
 
         erase_old_data(space, all_ships);
