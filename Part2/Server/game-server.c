@@ -4,6 +4,7 @@ void *context;
 pthread_mutex_t lock_space;
 pthread_mutex_t lock_aliens;
 pthread_mutex_t lock_game_end;
+pthread_mutex_t lock_publish;
 
 int main()
 {
@@ -25,11 +26,18 @@ int main()
         return 0;
     }
 
+    if (pthread_mutex_init(&lock_publish, NULL) != 0)
+    {
+        printf("Mutex has failed\n");
+        return 0;
+    }
+
     run_game();
 
     pthread_mutex_destroy(&lock_space);
     pthread_mutex_destroy(&lock_aliens);
     pthread_mutex_destroy(&lock_game_end);
+    pthread_mutex_destroy(&lock_publish);
 
     return 0;
 }
@@ -89,6 +97,10 @@ void run_game()
     free(all_ships.ships);
     free(all_ships.aliens);
 
+    delwin(numbers);
+    delwin(score_board);
+    delwin(space);
+
     endwin();
 
     zmq_close(responder);
@@ -133,7 +145,9 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
             break;
 
         case Server_disconnect:
+            pthread_mutex_lock(&lock_publish);
             publish_end_game(publisher);
+            pthread_mutex_unlock(&lock_publish);
             pthread_mutex_lock(&lock_game_end);
             *game_end = 1;
             pthread_mutex_unlock(&lock_game_end);
@@ -147,7 +161,10 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
             break;
 
         // Publish the updated display data to the outer-display
+        pthread_mutex_lock(&lock_publish);
         publish_display_data(publisher, &all_ships);
+        pthread_mutex_unlock(&lock_publish);
+
     }
 }
 
@@ -184,8 +201,9 @@ void *run_aliens(void *args)
         }
 
         alien_recovery(aliens, n_alive, &last_num_alive, &revival_timer);
-
+        pthread_mutex_lock(&lock_publish);
         publish_display_data(alien_arg->publisher, alien_arg->data);
+        pthread_mutex_unlock(&lock_publish);
 
         sleep(1);
 

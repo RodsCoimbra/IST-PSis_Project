@@ -295,7 +295,9 @@ void *display_zap(void *arg)
     pthread_mutex_unlock(&lock_space);
     
     // send an update to the outer-display to display the zap
+    pthread_mutex_lock(&lock_publish);
     publish_display_data(display_zap_arg->publisher, display_zap_arg->all_ships);
+    pthread_mutex_unlock(&lock_publish);
     
     // zap is displayed for 0.5 seconds
     usleep(500000);
@@ -305,7 +307,9 @@ void *display_zap(void *arg)
     
     // send an update to the outer-display to erase the zap
     display_zap_arg->current_ship->zap = ERASE_ZAP;
+    pthread_mutex_lock(&lock_publish);
     publish_display_data(display_zap_arg->publisher, display_zap_arg->all_ships);
+    pthread_mutex_unlock(&lock_publish);
 
     pthread_mutex_lock(&lock_space);
     wrefresh(display_zap_arg->space);
@@ -313,7 +317,6 @@ void *display_zap(void *arg)
 
     display_zap_arg->current_ship->zap = NO_ZAP;
     free(display_zap_arg);
-
     pthread_exit(NULL);
 }
 
@@ -375,4 +378,26 @@ void initialize_ships(ship_info_t *ship_data)
 {
     for (int i = 0; i < N_SHIPS; i++)
         ship_data[i].ship = 0;
+}
+
+/**
+ * @brief Checks if the encryption of the message is correct to avoid cheating
+ *
+ * @param all_ships all ships data
+ * @param m message to check
+ * @return 1 if the encryption is correct, 0 otherwise
+ */
+int check_encryption(ship_info_t *all_ships, remote_char_t m)
+{
+    // Check if the message is the first connection, no encryption needed
+    if (m.action == Astronaut_connect || m.action == Server_disconnect)
+        return 1;
+
+    ship_info_t *current_ship = find_ship_info(all_ships, m.ship);
+
+    if (current_ship->encryption == m.encryption)
+        return 1;
+
+    // If the encryption is not valid, ignore message
+    return 0;
 }

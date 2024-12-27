@@ -47,28 +47,6 @@ void update_numbers_boxs(WINDOW *numbers, WINDOW *space, WINDOW *score_board)
 }
 
 /**
- * @brief Checks if the encryption of the message is correct to avoid cheating
- *
- * @param all_ships all ships data
- * @param m message to check
- * @return 1 if the encryption is correct, 0 otherwise
- */
-int check_encryption(ship_info_t *all_ships, remote_char_t m)
-{
-    // Check if the message is the first connection, no encryption needed
-    if (m.action == Astronaut_connect || m.action == Server_disconnect)
-        return 1;
-
-    ship_info_t *current_ship = find_ship_info(all_ships, m.ship);
-
-    if (current_ship->encryption == m.encryption)
-        return 1;
-
-    // If the encryption is not valid, ignore message
-    return 0;
-}
-
-/**
  * @brief Clip the value between the min and max values
  *
  * @param value value to clip

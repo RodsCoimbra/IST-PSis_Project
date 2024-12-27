@@ -12,6 +12,7 @@ typedef struct alien_info_t alien_info_t;
 
 extern pthread_mutex_t lock_space;
 extern pthread_mutex_t lock_aliens;
+extern pthread_mutex_t lock_publish;
 
 typedef struct {
     WINDOW *space;
@@ -47,5 +48,7 @@ int get_position_x(position_info_t position);
 int get_position_y(position_info_t position);
 
 void initialize_ships(ship_info_t *);
+
+int check_encryption(ship_info_t *, remote_char_t );
 
 #endif

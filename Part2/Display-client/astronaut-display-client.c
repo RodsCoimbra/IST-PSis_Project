@@ -3,7 +3,6 @@
 void *context;
 pthread_mutex_t lock;
 pthread_mutex_t lock_space;
-pthread_mutex_t lock_aliens;
 
 int main()
 {

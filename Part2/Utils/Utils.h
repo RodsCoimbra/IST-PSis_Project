@@ -12,8 +12,6 @@ void clip_value(int *, int, int);
 
 void initialize_ncurses();
 
-int check_encryption(ship_info_t *, remote_char_t );
-
 void initialize_window(WINDOW **, WINDOW **, WINDOW **);
 
 void update_numbers_boxs(WINDOW *, WINDOW *, WINDOW *);
