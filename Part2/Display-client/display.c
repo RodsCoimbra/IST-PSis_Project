@@ -6,11 +6,10 @@ pthread_mutex_t lock_space;
 
 int main()
 {
-    void *msg;
-    pthread_t joystick_thread;
     long int disconnect = 0;
     void *subscriber;
     context = zmq_ctx_new();
+    
     if (pthread_mutex_init(&lock, NULL) != 0)
     {
         printf("Mutex has failed\n");
@@ -27,21 +26,11 @@ int main()
 
     initialize_connection_sub(&context, &subscriber);
 
-    pthread_create(&joystick_thread, NULL, joystick, &disconnect);
-
     display(&disconnect, subscriber);
 
-    pthread_join(joystick_thread, &msg);
     endwin();
-
-    printf("Disconnected ship %c\n", ((remote_char_t *)msg)->ship);
-    printf("Final Pontuation: %d\n", ((remote_char_t *)msg)->points);
-
-    free(msg);
-
     pthread_mutex_destroy(&lock);
     pthread_mutex_destroy(&lock_space);
-
     zmq_close(subscriber);
     zmq_ctx_destroy(context);
 

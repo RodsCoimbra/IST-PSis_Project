@@ -10,7 +10,7 @@ SERVER_C 		= $(SERVER)/Compiled
 UTILS_C 		= $(UTILS)/Compiled
 DISP_CLIENT_C 	= $(DISP_CLIENT)/Compiled
 
-all: game-server display-client
+all: game-server display-client outer-space-display astronaut-client
 
 #Game Server
 game-server: game-server.o communication.o space_ship.o Utils.o space_aliens.o space.pb-c.c
@@ -20,12 +20,27 @@ game-server: game-server.o communication.o space_ship.o Utils.o space_aliens.o s
 display-client: astronaut-display-client.o communication.o Utils.o outer-space-display.o space.pb-c.c astronaut-client.o
 	gcc $(CFLAGS) space.pb-c.c $(DISP_CLIENT_C)/astronaut-display-client.o $(UTILS_C)/communication.o $(UTILS_C)/Utils.o $(DISP_CLIENT_C)/outer-space-display.o $(DISP_CLIENT_C)/astronaut-client.o -o astronaut-display-client -lzmq -lncurses -lprotobuf-c -lpthread
 
+#Outer Space Display
+outer-space-display: display.o communication.o Utils.o outer-space-display.o
+	gcc $(CFLAGS) space.pb-c.c $(DISP_CLIENT_C)/outer-space-display.o $(DISP_CLIENT_C)/display.o $(UTILS_C)/communication.o $(UTILS_C)/Utils.o -o outer-space-display -lzmq -lncurses -lpthread -lprotobuf-c
+
+#Astronaut Client
+astronaut-client: client.o communication.o Utils.o
+	gcc $(CFLAGS) space.pb-c.c $(DISP_CLIENT_C)/client.o $(UTILS_C)/communication.o $(UTILS_C)/Utils.o -o astronaut-client -lzmq -lncurses -lpthread -lprotobuf-c
+
+
 #Protobuf
 proto: space.proto
 	protoc-c --python_out=. space.proto
 	protoc-c --c_out=. space.proto
 
 #Compile
+client.o: $(DISP_CLIENT)/client.c $(DISP_CLIENT)/client.h $(UTILS)/remote-char.h $(UTILS)/communication.h $(UTILS)/Utils.h
+	gcc $(CFLAGS) -c $(DISP_CLIENT)/client.c -o $(DISP_CLIENT)/Compiled/client.o
+
+display.o: $(DISP_CLIENT)/display.c $(DISP_CLIENT)/astronaut-display-client.h $(UTILS)/remote-char.h $(UTILS)/communication.h $(UTILS)/Utils.h
+	gcc $(CFLAGS) -c $(DISP_CLIENT)/display.c -o $(DISP_CLIENT)/Compiled/display.o
+
 astronaut-client.o: $(DISP_CLIENT)/astronaut-client.c $(UTILS)/remote-char.h $(UTILS)/communication.h $(UTILS)/Utils.h
 	gcc $(CFLAGS) -c $(DISP_CLIENT)/astronaut-client.c -o $(DISP_CLIENT)/Compiled/astronaut-client.o
 
@@ -51,4 +66,4 @@ Utils.o: $(UTILS)/Utils.c $(UTILS)/Utils.h $(UTILS)/remote-char.h
 	gcc $(CFLAGS) -c $(UTILS)/Utils.c -o $(UTILS)/Compiled/Utils.o -lpthread
 
 clean:
-	rm -f */Compiled/*.o game-server game-server astronaut-display-client
+	rm -f */Compiled/*.o game-server astronaut-display-client outer-space-display astronaut-client
