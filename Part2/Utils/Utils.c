@@ -63,7 +63,7 @@ int check_encryption(ship_info_t *all_ships, remote_char_t m)
 
     if (current_ship->encryption == m.encryption)
         return 1;
-    
+
     // If the encryption is not valid, ignore message
     return 0;
 }
@@ -140,7 +140,7 @@ void update_score_board(WINDOW **score_board, ship_info_t ship_data[])
         if (current_ship.ship != 0) // if the ship is connected
         {
             wmove(*score_board, score_pos, 3);
-            wprintw(*score_board, "%c - %d", current_ship.ship, current_ship.points);
+            wprintw(*score_board, "%c - %3d", current_ship.ship, current_ship.points);
             score_pos++;
         }
     }

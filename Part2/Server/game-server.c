@@ -40,7 +40,7 @@ int main()
 void run_game()
 {
     WINDOW *space, *score_board, *numbers;
-    void *responder, *publisher;
+    void *responder, *publisher, *requester;
     pthread_t aliens_thread, keyboard_thread, display_thread;
     int game_end = 0;
     all_ships_t all_ships;
@@ -57,27 +57,35 @@ void run_game()
 
     initialize_window(&space, &score_board, &numbers);
 
+    // Connections to allow threads to end the game
+    initialize_connection_client(&context, &requester);
 
+    // Arguments for the threads
     run_alien_args *args_aliens = (run_alien_args *)malloc(sizeof(run_alien_args));
     args_aliens->game_end = &game_end;
     args_aliens->data = &all_ships;
     args_aliens->space = space;
     args_aliens->publisher = publisher;
-    
-    display_args* args_display = (display_args*) malloc(sizeof(display_args));
+    args_aliens->requester = requester;
+
+    display_args *args_display = (display_args *)malloc(sizeof(display_args));
     args_display->space = space;
     args_display->score_board = score_board;
     args_display->numbers = numbers;
     args_display->game_end = &game_end;
 
-    pthread_create(&keyboard_thread, NULL, keyboard_handler, NULL);
+    // Threads
+    pthread_create(&keyboard_thread, NULL, keyboard_handler, requester);
     pthread_create(&aliens_thread, NULL, run_aliens, args_aliens);
     pthread_create(&display_thread, NULL, thread_refresh, args_display);
-    
+
     run_players(all_ships, space, score_board, publisher, responder, numbers, &game_end);
 
     pthread_join(aliens_thread, NULL);
     pthread_join(display_thread, NULL);
+
+    zmq_close(requester);
+
     free(all_ships.ships);
     free(all_ships.aliens);
 
@@ -87,7 +95,6 @@ void run_game()
     zmq_close(publisher);
     zmq_ctx_destroy(context);
 }
-
 
 /**
  * @brief Runs the game and handles the communication with players and aliens.
@@ -104,7 +111,6 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
         recv_TCP(responder, &m); // Receive message from client
 
         // Check if is the correct client or alien sending the message
-        
         if (!check_encryption(all_ships.ships, m))
         {
             send_TCP(responder, &m);
@@ -136,7 +142,7 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
             break;
         }
         send_TCP(responder, &m);
-        
+
         if (*game_end)
             break;
 
@@ -153,45 +159,59 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
 void *run_aliens(void *args)
 {
     run_alien_args *alien_arg = (run_alien_args *)args;
-    alien_info_t *alien = alien_arg->data->aliens;
-    int alive, aliens_dead = 0;
+    alien_info_t *aliens = alien_arg->data->aliens;
+    void *requester = alien_arg->requester;
+    int alive;
+    int n_alive;
+    int last_num_alive = N_ALIENS;
     int local_game_end;
+    time_t revival_timer;
+
     while (local_game_end == 0)
     {
-        aliens_dead = 1;
+        n_alive = 0;
         for (int i = 0; i < N_ALIENS; i++)
         {
             pthread_mutex_lock(&lock_aliens);
-            alive = alien[i].alive;
+            alive = aliens[i].alive;
             pthread_mutex_unlock(&lock_aliens);
 
             if (alive)
             {
-                aliens_dead = 0;
-                alien_movement(&(alien[i]), alien_arg->space, random_direction());
+                n_alive++;
+                alien_movement(&(aliens[i]), alien_arg->space, random_direction());
             }
         }
+
+        alien_recovery(aliens, n_alive, &last_num_alive, &revival_timer);
+
         publish_display_data(alien_arg->publisher, alien_arg->data);
-        if (aliens_dead)
+
+        sleep(1);
+
+        // End the game if all aliens are dead
+        if (n_alive == 0)
+        {
+            remote_char_t m;
+            m.action = Server_disconnect;
+            send_TCP(requester, &m);
+            recv_TCP(requester, &m);
             break;
+        }
 
         pthread_mutex_lock(&lock_game_end);
         local_game_end = *(alien_arg->game_end);
         pthread_mutex_unlock(&lock_game_end);
-
-        sleep(1);
     }
     free(args);
     pthread_exit(NULL);
 }
 
-void *keyboard_handler(void *arg)
+void *keyboard_handler(void *requester)
 {
     int key;
-    void *requester;
     remote_char_t m;
     m.action = Server_disconnect;
-    initialize_connection_client(&context, &requester);
     while (1)
     {
         key = getch();
@@ -202,20 +222,19 @@ void *keyboard_handler(void *arg)
             break;
         }
     }
-    zmq_close(requester);
     pthread_exit(NULL);
 }
 
 void *thread_refresh(void *args)
 {
-    display_args disp_args = *(display_args*)args;
-    WINDOW *space = (WINDOW*)disp_args.space;
-    WINDOW *score_board = (WINDOW*)disp_args.score_board;
-    WINDOW *numbers = (WINDOW*)disp_args.numbers;
-    int *game_end = (int*)disp_args.game_end;
+    display_args disp_args = *(display_args *)args;
+    WINDOW *space = (WINDOW *)disp_args.space;
+    WINDOW *score_board = (WINDOW *)disp_args.score_board;
+    WINDOW *numbers = (WINDOW *)disp_args.numbers;
+    int *game_end = (int *)disp_args.game_end;
     int local_game_end = 0;
 
-    while(local_game_end == 0)
+    while (local_game_end == 0)
     {
         pthread_mutex_lock(&lock_game_end);
         local_game_end = *game_end;

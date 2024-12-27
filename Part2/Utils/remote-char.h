@@ -12,8 +12,9 @@
 #define N_ALIENS ((WINDOW_SIZE - 2) * (WINDOW_SIZE - 2) / 3)
 #define RECHARGING_TIME 3
 #define STUN_TIME 10
+#define REVIVE_TIME 10
 
-#define msg_ships_size  (N_SHIPS * sizeof(ship_info_t))
+#define msg_ships_size (N_SHIPS * sizeof(ship_info_t))
 #define msg_aliens_size (N_ALIENS * sizeof(alien_info_t))
 
 #define TCP_PATH_REP "tcp://*:5505"
@@ -95,8 +96,8 @@ typedef enum status_t
 
 typedef struct all_ships_t
 {
-    ship_info_t* ships;
-    alien_info_t* aliens;
+    ship_info_t *ships;
+    alien_info_t *aliens;
 } all_ships_t;
 
 #endif

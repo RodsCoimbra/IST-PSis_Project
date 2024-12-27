@@ -18,24 +18,24 @@
 
 typedef struct
 {
-    all_ships_t* data;
-    WINDOW* space;
+    all_ships_t *data;
+    WINDOW *space;
     void *publisher;
-    int *game_end;  
+    int *game_end;
+    void *requester;
 } run_alien_args;
 
 typedef struct
 {
-    WINDOW* space;
-    WINDOW* score_board;
-    WINDOW* numbers;
+    WINDOW *space;
+    WINDOW *score_board;
+    WINDOW *numbers;
     int *game_end;
 } display_args;
 
-
 void *run_aliens(void *);
 
-void run_players(all_ships_t , WINDOW *, WINDOW *, void *, void *, WINDOW*, int *);
+void run_players(all_ships_t, WINDOW *, WINDOW *, void *, void *, WINDOW *, int *);
 
 void *keyboard_handler(void *arg);
 
