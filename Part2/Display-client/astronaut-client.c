@@ -1,5 +1,10 @@
 #include "astronaut-client.h"
 
+/**
+ * @brief main client function that handles the astronaut actions.
+ *
+ * @param arg Pointer to the disconnect flag.
+ */
 void *joystick(void *arg)
 {
     remote_char_t *m = malloc(sizeof(remote_char_t));
@@ -45,7 +50,7 @@ void *joystick(void *arg)
     pthread_mutex_unlock(&lock);
 
     zmq_close(requester);
-    return (void *) m;
+    return (void *)m;
 }
 
 /**

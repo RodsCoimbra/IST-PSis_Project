@@ -20,7 +20,7 @@ void initialize_connection_server(void **context, void **responder, void **publi
     // Initialize publisher socket
     *publisher = zmq_socket(*context, ZMQ_PUB);
     rc = zmq_bind(*publisher, TCP_PATH_PUB);
-    assert(rc == 0);  
+    assert(rc == 0);
 }
 
 /**
@@ -87,7 +87,7 @@ void recv_TCP(void *responder, remote_char_t *m)
  * @param subscriber Pointer to the zmq subscriber socket
  * @param all_data all ships data
  */
-void recv_subscription_TCP(void *subscriber, all_ships_t *all_data, long int* game_end)
+void recv_subscription_TCP(void *subscriber, all_ships_t *all_data, long int *game_end)
 {
     char topic[8];
     if (zmq_recv(subscriber, topic, 7, 0) == -1)
@@ -99,7 +99,8 @@ void recv_subscription_TCP(void *subscriber, all_ships_t *all_data, long int* ga
     size_t msg_size = msg_ships_size + msg_aliens_size;
     char *buffer = malloc(msg_size);
 
-    if (zmq_recv(subscriber, buffer, msg_size, 0) == -1) {
+    if (zmq_recv(subscriber, buffer, msg_size, 0) == -1)
+    {
         perror("zmq_recv");
         exit(1);
     }
@@ -111,12 +112,9 @@ void recv_subscription_TCP(void *subscriber, all_ships_t *all_data, long int* ga
     }
     else if (strcmp(topic, "Disconn") == 0)
     {
-       *game_end = 1;
+        *game_end = 1;
     }
     free(buffer);
-    
-
-    
 }
 
 /**
@@ -149,7 +147,11 @@ void publish_display_data(void *publisher, all_ships_t *all_ships)
     send_scoreboard(publisher, all_ships);
 }
 
-
+/**
+ * @brief Publish the end game message to all displays
+ *
+ * @param publisher Pointer to the zmq publisher socket
+ */
 void publish_end_game(void *publisher)
 {
     if (zmq_send(publisher, "Disconn", 8, ZMQ_SNDMORE) == -1)
@@ -168,6 +170,12 @@ void publish_end_game(void *publisher)
     free(buffer);
 }
 
+/**
+ * @brief Send the scoreboard to all displays
+ *
+ * @param publisher Pointer to the zmq publisher socket
+ * @param all_ships Pointer to the all_ships_t struct
+ */
 void send_scoreboard(void *publisher, const all_ships_t *all_ships)
 {
     ScoreBoard scoreboard = SCORE_BOARD__INIT;

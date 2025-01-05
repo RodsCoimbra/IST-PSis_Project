@@ -4,6 +4,11 @@ void *context;
 pthread_mutex_t lock;
 pthread_mutex_t lock_space;
 
+/**
+ * @brief One thread handles the player movement and messages to the server,
+ * the other thread handles the display of the game.
+ *
+ */
 int main()
 {
     void *msg;
@@ -47,4 +52,3 @@ int main()
 
     return 0;
 }
-

@@ -109,11 +109,16 @@ void run_game()
 }
 
 /**
- * @brief Runs the game and handles the communication with players and aliens.
- *   It then processes the messages and updates the display and outer displays accordingly.
+ * @brief Run all the players' actions like connect, move, zap and disconnect. Also makes the client
+ * disconnect if the game ends.
  *
- * @param encryption The encryption key used for all the aliens' messages.
- * TODO
+ * @param all_ships Struct with all the ships and aliens data.
+ * @param space Pointer to the game window.
+ * @param score_board Pointer to the score board window.
+ * @param publisher Pointer to the zmq publisher socket.
+ * @param responder Pointer to the zmq responder socket.
+ * @param numbers Pointer to the numbers window.
+ * @param game_end Pointer to the game end flag.
  */
 void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void *publisher, void *responder, WINDOW *numbers, int *game_end)
 {
@@ -164,14 +169,14 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
         pthread_mutex_lock(&lock_publish);
         publish_display_data(publisher, &all_ships);
         pthread_mutex_unlock(&lock_publish);
-
     }
 }
 
 /**
  * @brief Generate the next random move for each alien and send them to the server every second.
  *
- * @param encryption The encryption key used for all the aliens' messages.
+ * @param args Contains the game end flag, the data of all ships and aliens, the game window,
+ * the zmq publisher socket and the zmq requester socket.
  */
 void *run_aliens(void *args)
 {
@@ -225,6 +230,11 @@ void *run_aliens(void *args)
     pthread_exit(NULL);
 }
 
+/**
+ * @brief Handle the keyboard input to end the game.
+ *
+ * @param requester Pointer to the zmq requester socket.
+ */
 void *keyboard_handler(void *requester)
 {
     int key;
@@ -243,6 +253,12 @@ void *keyboard_handler(void *requester)
     pthread_exit(NULL);
 }
 
+/**
+ * @brief Refresh the game window every 300ms. Keeps the getch from the keyboard_handler thread
+ * from erasing the game window.
+ *
+ * @param args Contains the game window, the score board window, the numbers window and the game end flag.
+ */
 void *thread_refresh(void *args)
 {
     display_args disp_args = *(display_args *)args;

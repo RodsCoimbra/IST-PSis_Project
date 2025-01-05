@@ -34,7 +34,13 @@ void initialize_window(WINDOW **space, WINDOW **score_board, WINDOW **numbers)
     wrefresh(*score_board);
 }
 
-// TODO
+/**
+ * @brief reprint the numbers and boxes in the windows
+ *
+ * @param numbers Pointer to the numbers window
+ * @param space Pointer to the game window
+ * @param score_board Pointer to the score board window
+ */
 void update_numbers_boxs(WINDOW *numbers, WINDOW *space, WINDOW *score_board)
 {
     for (int i = 1; i <= WINDOW_SIZE - 2; i++)
@@ -69,7 +75,6 @@ void clip_value(int *value, int min, int max)
  * @param update_position Position to update
  * @param c Character to update
  */
-
 void update_window_char(WINDOW *space, position_info_t update_position, char c)
 {
     wmove(space, update_position.x, update_position.y);
@@ -206,6 +211,13 @@ int cmp_position(position_info_t a, position_info_t b)
     return a.x == b.x && a.y == b.y;
 }
 
+/**
+ * @brief Refresh the windows
+ *
+ * @param space Pointer to the game window
+ * @param score_board Pointer to the score board window
+ * @param numbers Pointer to the numbers window
+ */
 void refresh_windows(WINDOW *space, WINDOW *score_board, WINDOW *numbers)
 {
     wrefresh(space);

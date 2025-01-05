@@ -50,12 +50,12 @@ int main()
 
 /**
  * @brief Receives the key pressed by the user and sets the action of the astronaut.
- * 
+ *
  * @param m Holds the astronaut message for the server.
- * 
+ *
  * @return Returns 1 if the key pressed is valid, 0 otherwise.
  */
-int execute_action(remote_char_t *m)
+int execute_action(remote_char_t *m) // TODO a funcao é a mesma que em astronaut client, dá para retirar o .h tbm
 {
     int key;
     key = getch();

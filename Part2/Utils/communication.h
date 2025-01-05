@@ -16,16 +16,16 @@ void initialize_connection_client(void **, void **);
 
 void initialize_connection_sub(void **, void **);
 
-void recv_subscription_TCP(void *, all_ships_t *,long int*);
+void recv_subscription_TCP(void *, all_ships_t *, long int *);
 
 void send_TCP(void *, remote_char_t *);
 
 void recv_TCP(void *, remote_char_t *);
 
-void publish_display_data(void *publisher, all_ships_t *all_ships);
+void publish_display_data(void *, all_ships_t *);
 
-void publish_end_game(void *publisher);
+void publish_end_game(void *);
 
-void send_scoreboard(void *publisher, const all_ships_t *all_ships);
+void send_scoreboard(void *, const all_ships_t *);
 
 #endif

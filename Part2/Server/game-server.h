@@ -37,10 +37,10 @@ void *run_aliens(void *);
 
 void run_players(all_ships_t, WINDOW *, WINDOW *, void *, void *, WINDOW *, int *);
 
-void *keyboard_handler(void *arg);
+void *keyboard_handler(void *);
 
 void run_game();
 
-void *thread_refresh(void *args);
+void *thread_refresh(void *);
 
 #endif

@@ -11,15 +11,15 @@
 extern void *context;
 extern pthread_mutex_t lock;
 
-void display(long int *disconnect, void *subscriber);
+void display(long int *, void *);
 
-void receive_ships(void *subscriber, all_ships_t *all_ships);
+void receive_ships(void *, all_ships_t *);
 
-void erase_old_data(WINDOW *space, all_ships_t all_ships);
+void erase_old_data(WINDOW *, all_ships_t);
 
-void display_new_data(WINDOW *space, all_ships_t all_ships, WINDOW *score_board, WINDOW *numbers);
+void display_new_data(WINDOW *, all_ships_t, WINDOW *, WINDOW *);
 
-void draw_zap(WINDOW *space, position_info_t position, movement_t move_type, ship_info_t *ships);
+void draw_zap(WINDOW *, position_info_t, movement_t, ship_info_t *);
 
-void erase_zap(WINDOW *space, position_info_t position, movement_t move_type, ship_info_t *ships);
+void erase_zap(WINDOW *, position_info_t, movement_t, ship_info_t *);
 #endif

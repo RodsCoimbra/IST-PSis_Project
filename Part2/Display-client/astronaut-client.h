@@ -15,6 +15,6 @@
 extern void *context;
 extern pthread_mutex_t lock;
 
-void *joystick(void *arg);
+void *joystick(void *);
 
 int execute_action(remote_char_t *);
