@@ -11,4 +11,4 @@
 #include "../Utils/communication.h"
 #include "../Utils/Utils.h"
 
-void *thread_disconnect(void *arg);
+void *thread_disconnect(void *);
