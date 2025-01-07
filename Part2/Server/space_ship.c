@@ -97,8 +97,6 @@ void new_position(ship_info_t *current_ship, direction_t direction)
     }
 }
 
-
-
 /**
  * @brief Check if the ship is stunned
  *
@@ -159,6 +157,7 @@ void astronaut_connect(ship_info_t *ship_data, remote_char_t *m, WINDOW *space, 
     initialize_ship(current_ship, spawn_points[ship_idx], m->ship);
 
     m->encryption = current_ship->encryption; // send the encryption key to the client
+
     pthread_mutex_lock(&lock_space);
     update_window_char(space, current_ship->position, m->ship | A_BOLD);
     pthread_mutex_unlock(&lock_space);
@@ -213,7 +212,6 @@ void astronaut_zap(all_ships_t *all_ships, remote_char_t *m, WINDOW *space, WIND
     if (current_ship == NULL || IsRecharging(current_ship, current_time))
         return;
 
-
     switch (current_ship->move_type)
     {
     case HORIZONTAL:
@@ -264,12 +262,19 @@ void astronaut_disconnect(ship_info_t *ship_data, remote_char_t *m, WINDOW *spac
     update_score_board(&score_board, ship_data);
 }
 
+/**
+ * @brief Display the zap in the game window
+ *
+ * @param arg Pointer to the thread_display_zap_t struct that contains the space window,
+ * all of the ships, the current ship, and the publisher
+ */
 void *display_zap(void *arg)
 {
     thread_display_zap_t *display_zap_arg = (thread_display_zap_t *)arg;
     display_zap_arg->current_ship->zap = DRAW_ZAP;
     void (*draw)(WINDOW *, position_info_t, ship_info_t *, char);
     char symbol;
+
     switch (display_zap_arg->current_ship->move_type)
     {
     case HORIZONTAL:
@@ -286,25 +291,25 @@ void *display_zap(void *arg)
         pthread_exit(NULL);
     }
     display_zap_arg->current_ship->zap_position = display_zap_arg->current_ship->position;
-    
+
     // Draw the zap
     draw(display_zap_arg->space, display_zap_arg->current_ship->zap_position, display_zap_arg->all_ships->ships, symbol);
-    
+
     pthread_mutex_lock(&lock_space);
     wrefresh(display_zap_arg->space);
     pthread_mutex_unlock(&lock_space);
-    
+
     // send an update to the outer-display to display the zap
     pthread_mutex_lock(&lock_publish);
     publish_display_data(display_zap_arg->publisher, display_zap_arg->all_ships);
     pthread_mutex_unlock(&lock_publish);
-    
+
     // zap is displayed for 0.5 seconds
     usleep(500000);
-    
+
     // Clear the zap
     draw(display_zap_arg->space, display_zap_arg->current_ship->zap_position, display_zap_arg->all_ships->ships, ' ');
-    
+
     // send an update to the outer-display to erase the zap
     display_zap_arg->current_ship->zap = ERASE_ZAP;
     pthread_mutex_lock(&lock_publish);
@@ -328,7 +333,7 @@ void *display_zap(void *arg)
  * @param space Pointer to the game window
  * @param current_time Current time
  * @param publisher Pointer to the publisher
- * TODO
+ * @param get_position Function to get the position of the ship
  */
 void zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *space, int current_time, void *publisher, int (*get_position)(position_info_t))
 {
@@ -364,16 +369,35 @@ void zap(ship_info_t *current_ship, all_ships_t *all_ships, WINDOW *space, int c
     pthread_create(&thread, NULL, display_zap, (void *)display_zap_arg);
 }
 
+/**
+ * @brief Get the x position of a position_info_t struct
+ *
+ * @param position Position to get the x coordinate
+ *
+ * @return x coordinate of the position
+ */
 int get_position_x(position_info_t position)
 {
     return position.x;
 }
 
+/**
+ * @brief Get the y position of a position_info_t struct
+ *
+ * @param position Position to get the y coordinate
+ *
+ * @return y coordinate of the position
+ */
 int get_position_y(position_info_t position)
 {
     return position.y;
 }
 
+/**
+ * @brief Initialize all the ships
+ *
+ * @param ship_data Array of ship data
+ */
 void initialize_ships(ship_info_t *ship_data)
 {
     for (int i = 0; i < N_SHIPS; i++)

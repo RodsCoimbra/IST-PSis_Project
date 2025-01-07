@@ -8,6 +8,7 @@ pthread_mutex_t lock_publish;
 
 int main()
 {
+    // Initialize mutexes
     if (pthread_mutex_init(&lock_space, NULL) != 0)
     {
         printf("Mutex has failed\n");
@@ -82,11 +83,16 @@ void run_game()
     args_display->numbers = numbers;
     args_display->game_end = &game_end;
 
-    // Threads
+    // Handle the keyboard input to end the game
     pthread_create(&keyboard_thread, NULL, keyboard_handler, requester);
+
+    // Handles the aliens movement
     pthread_create(&aliens_thread, NULL, run_aliens, args_aliens);
+
+    // Refresh the game window every 300ms
     pthread_create(&display_thread, NULL, thread_refresh, args_display);
 
+    // Main thread that handles the players' actions
     run_players(all_ships, space, score_board, publisher, responder, numbers, &game_end);
 
     pthread_join(aliens_thread, NULL);
@@ -127,7 +133,7 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
     {
         recv_TCP(responder, &m); // Receive message from client
 
-        // Check if is the correct client or alien sending the message
+        // Check if the correct client is sending the message
         if (!check_encryption(all_ships.ships, m))
         {
             send_TCP(responder, &m);
@@ -148,11 +154,11 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
         case Astronaut_disconnect:
             astronaut_disconnect(all_ships.ships, &m, space, score_board);
             break;
-
         case Server_disconnect:
             pthread_mutex_lock(&lock_publish);
             publish_end_game(publisher);
             pthread_mutex_unlock(&lock_publish);
+
             pthread_mutex_lock(&lock_game_end);
             *game_end = 1;
             pthread_mutex_unlock(&lock_game_end);
@@ -160,6 +166,8 @@ void run_players(all_ships_t all_ships, WINDOW *space, WINDOW *score_board, void
         default:
             break;
         }
+
+        // respond to the client
         send_TCP(responder, &m);
 
         if (*game_end)
@@ -205,7 +213,9 @@ void *run_aliens(void *args)
             }
         }
 
+        // Performs the alien recovery if no alien was killed in the last 10 seconds
         alien_recovery(aliens, n_alive, &last_num_alive, &revival_timer);
+
         pthread_mutex_lock(&lock_publish);
         publish_display_data(alien_arg->publisher, alien_arg->data);
         pthread_mutex_unlock(&lock_publish);
@@ -274,7 +284,10 @@ void *thread_refresh(void *args)
         local_game_end = *game_end;
         pthread_mutex_unlock(&lock_game_end);
 
+        // refresh the boxes and the numbers around the game window
         update_numbers_boxs(numbers, space, score_board);
+
+        // Refresh the ships and aliens in the game window
         pthread_mutex_lock(&lock_space);
         refresh_windows(space, score_board, numbers);
         pthread_mutex_unlock(&lock_space);

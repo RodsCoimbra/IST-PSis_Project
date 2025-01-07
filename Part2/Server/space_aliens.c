@@ -21,14 +21,16 @@ void initialize_aliens(alien_info_t *alien_data)
 /**
  * @brief Moves the alien in the given direction, deleting the previous position and updating the new one
  *
- * @param TODO
- * @param
+ * @param current_alien The alien to be moved
+ * @param space The window where the alien is displayed
+ * @param direction The direction in which the alien will move
  */
 void alien_movement(alien_info_t *current_alien, WINDOW *space, direction_t direction)
 {
     pthread_mutex_lock(&lock_space);
     update_window_char(space, current_alien->position, ' ');
     pthread_mutex_unlock(&lock_space);
+
     switch (direction)
     {
     case UP:
@@ -67,6 +69,11 @@ direction_t random_direction()
     return (direction_t)(random() % 4);
 }
 
+/**
+ * @brief Revives the alien in a random position
+ *
+ * @param alien The alien to be revived
+ */
 void revive_alien(alien_info_t *alien)
 {
     int x = random() % (MAX_POS - MIN_POS + 1) + MIN_POS;
@@ -79,14 +86,25 @@ void revive_alien(alien_info_t *alien)
     pthread_mutex_unlock(&lock_aliens);
 }
 
+/**
+ * @brief Revives 10% of the dead aliens after a certain amount of time
+ *
+ * @param aliens The array of aliens
+ * @param n_alive The number of alive aliens
+ * @param last_num_alive The number of alive aliens in the previous iteration
+ * @param revival_timer The time when the last alien was killed
+ */
 void alien_recovery(alien_info_t *aliens, int n_alive, int *last_num_alive, time_t *revival_timer)
 {
+    // If the number of alive aliens has changed, reset the timer
     if (*last_num_alive != n_alive)
     {
         *last_num_alive = n_alive;
         *revival_timer = time(NULL);
         return;
     }
+
+    // If 10 seconds have not passed since the last alien was killed, return
     time_t current_time = time(NULL);
     if (current_time - *revival_timer < REVIVE_TIME)
         return;
