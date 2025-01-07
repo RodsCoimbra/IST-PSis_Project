@@ -9,7 +9,7 @@ int main()
     long int disconnect = 0;
     void *subscriber;
     context = zmq_ctx_new();
-    
+
     if (pthread_mutex_init(&lock, NULL) != 0)
     {
         printf("Mutex has failed\n");
@@ -36,4 +36,3 @@ int main()
 
     return 0;
 }
-

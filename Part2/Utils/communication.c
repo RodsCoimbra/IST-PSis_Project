@@ -107,6 +107,8 @@ void recv_subscription_TCP(void *subscriber, all_ships_t *all_data, long int *ga
 
     if (strcmp(topic, "Display") == 0)
     {
+        if (all_data == NULL)
+            return;
         memcpy(all_data->ships, buffer, msg_ships_size);
         memcpy(all_data->aliens, buffer + msg_ships_size, msg_aliens_size);
     }

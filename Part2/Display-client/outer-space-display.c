@@ -1,6 +1,6 @@
 #include "outer-space-display.h"
 
-void display(long int *disconnect, void* subscriber)
+void display(long int *disconnect, void *subscriber)
 {
     WINDOW *space, *score_board, *numbers;
     all_ships_t all_ships;

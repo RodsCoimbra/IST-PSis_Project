@@ -10,5 +10,4 @@
 #include "../Utils/remote-char.h"
 #include "../Utils/communication.h"
 #include "../Utils/Utils.h"
-
-void *thread_disconnect(void *);
+#include "astronaut-client.h"

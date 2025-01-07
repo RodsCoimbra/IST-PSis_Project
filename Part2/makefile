@@ -25,8 +25,8 @@ outer-space-display: display.o communication.o Utils.o outer-space-display.o
 	gcc $(CFLAGS) space.pb-c.c $(DISP_CLIENT_C)/outer-space-display.o $(DISP_CLIENT_C)/display.o $(UTILS_C)/communication.o $(UTILS_C)/Utils.o -o outer-space-display -lzmq -lncurses -lpthread -lprotobuf-c
 
 #Astronaut Client
-astronaut-client: client.o communication.o Utils.o
-	gcc $(CFLAGS) space.pb-c.c $(DISP_CLIENT_C)/client.o $(UTILS_C)/communication.o $(UTILS_C)/Utils.o -o astronaut-client -lzmq -lncurses -lpthread -lprotobuf-c
+astronaut-client: client.o communication.o Utils.o astronaut-client.o
+	gcc $(CFLAGS) space.pb-c.c $(DISP_CLIENT_C)/client.o $(UTILS_C)/communication.o $(UTILS_C)/Utils.o $(DISP_CLIENT_C)/astronaut-client.o -o astronaut-client -lzmq -lncurses -lpthread -lprotobuf-c
 
 
 #Protobuf

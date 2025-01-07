@@ -1,6 +1,7 @@
 #include "client.h"
 
-pthread_mutex_t lock_space; // Just for compatibility with the communication library
+pthread_mutex_t lock_space; // Just for compatibility with the communication libraryç
+pthread_mutex_t lock;       // Mutex for the disconnect flag
 void *context;
 
 /**
@@ -10,68 +11,46 @@ void *context;
  */
 int main()
 {
-    remote_char_t m;
-    int valid_action;
+    void *msg;
+    pthread_t joystick_thread;
     long int disconnect = 0;
-
-    void *requester;
+    long int local_disconnect = 0;
+    void *subscriber;
     context = zmq_ctx_new();
-
-    initialize_connection_client(&context, &requester);
-
-    pthread_t thread;
-    pthread_create(&thread, NULL, thread_disconnect, &disconnect);
-    m.action = Astronaut_connect;
-    // first connection to receive encryption key and ship character
-    send_TCP(requester, &m);
-
-    recv_TCP(requester, &m);
-    if (m.ship == 0)
+    if (pthread_mutex_init(&lock, NULL) != 0)
     {
-        printf("Server is full\n");
+        printf("Mutex has failed\n");
         return 0;
     }
+
     initialize_ncurses();
-    do
+
+    // Initialize the connection to the subscriber
+    initialize_connection_sub(&context, &subscriber);
+
+    pthread_create(&joystick_thread, NULL, joystick, &disconnect);
+
+    while (local_disconnect == 0)
     {
-        valid_action = execute_action(&m);
-        if (valid_action && !(disconnect))
-        {
-            send_TCP(requester, &m);
-            recv_TCP(requester, &m);
-            mvprintw(0, 0, "Ship %c with pontuation: %d", m.ship, m.points);
-        }
-        refresh(); /* Print it on to the real screen */
-    } while (m.action != Astronaut_disconnect && !disconnect);
+        recv_subscription_TCP(subscriber, NULL, &disconnect);
 
-    endwin(); /* End curses mode*/
-    pthread_join(thread, NULL);
-    zmq_close(requester);
-    zmq_ctx_destroy(context);
+        pthread_mutex_lock(&lock);
+        local_disconnect = disconnect;
+        pthread_mutex_unlock(&lock);
+    }
 
-    printf("Disconnected ship %c\n", m.ship);
-    printf("Final Pontuation: %d\n", m.points);
-    return 0;
-}
+    pthread_join(joystick_thread, &msg);
+    endwin();
 
-/**
- * @brief Disconnect thread, receives the disconnection message from the server
- *
- * @param arg Pointer to the disconnect flag
- */
-void *thread_disconnect(void *arg)
-{
-    char topic[] = "Disconn";
-    void *subscriber;
-    long int *disconnect = (long int *)arg;
+    printf("Disconnected ship %c\n", ((remote_char_t *)msg)->ship);
+    printf("Final Pontuation: %d\n", ((remote_char_t *)msg)->points);
 
-    subscriber = zmq_socket(context, ZMQ_SUB);
-    zmq_connect(subscriber, TCP_PATH_SUB);
-    zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, topic, strlen(topic));
+    free(msg);
 
-    recv_subscription_TCP(subscriber, NULL, disconnect);
+    pthread_mutex_destroy(&lock);
 
     zmq_close(subscriber);
+    zmq_ctx_destroy(context);
 
-    pthread_exit(NULL);
+    return 0;
 }
