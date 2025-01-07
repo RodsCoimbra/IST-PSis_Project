@@ -10,6 +10,7 @@ void initialize_ncurses()
     keypad(stdscr, TRUE); /* We get F1, F2 etc..		*/
     noecho();             /* Don't echo() while we do getch */
     curs_set(0);          /* Do not display the cursor */
+    refresh();            
 }
 
 /**
@@ -223,4 +224,48 @@ void refresh_windows(WINDOW *space, WINDOW *score_board, WINDOW *numbers)
     wrefresh(space);
     wrefresh(score_board);
     wrefresh(numbers);
+}
+
+
+/**
+ * @brief Receives the key pressed by the user and sets the action of the astronaut.
+ * 
+ * @param m Holds the astronaut message for the server.
+ * 
+ * @return Returns 1 if the key pressed is valid, 0 otherwise.
+ */
+int execute_action(remote_char_t *m)
+{
+    int key;
+    key = getch();
+    switch (key)
+    {
+    case KEY_LEFT:
+        m->direction = LEFT;
+        m->action = Astronaut_movement;
+        break;
+    case KEY_RIGHT:
+        m->direction = RIGHT;
+        m->action = Astronaut_movement;
+        break;
+    case KEY_DOWN:
+        m->direction = DOWN;
+        m->action = Astronaut_movement;
+        break;
+    case KEY_UP:
+        m->direction = UP;
+        m->action = Astronaut_movement;
+        break;
+    case KEY_SPACE:
+        m->action = Astronaut_zap;
+        break;
+    case KEY_q:
+    case KEY_Q:
+        m->action = Astronaut_disconnect;
+        break;
+    default:
+        return 0;
+        break;
+    }
+    return 1;
 }

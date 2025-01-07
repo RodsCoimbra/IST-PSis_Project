@@ -1,4 +1,4 @@
-#include "astronaut-client.h"
+#include "client.h"
 
 pthread_mutex_t lock_space; // Just for compatibility with the communication library
 /**
@@ -46,47 +46,4 @@ int main()
     printf("Disconnected ship %c\n", m.ship);
     printf("Final Pontuation: %d\n", m.points);
     return 0;
-}
-
-/**
- * @brief Receives the key pressed by the user and sets the action of the astronaut.
- *
- * @param m Holds the astronaut message for the server.
- *
- * @return Returns 1 if the key pressed is valid, 0 otherwise.
- */
-int execute_action(remote_char_t *m) // TODO a funcao é a mesma que em astronaut client, dá para retirar o .h tbm
-{
-    int key;
-    key = getch();
-    switch (key)
-    {
-    case KEY_LEFT:
-        m->direction = LEFT;
-        m->action = Astronaut_movement;
-        break;
-    case KEY_RIGHT:
-        m->direction = RIGHT;
-        m->action = Astronaut_movement;
-        break;
-    case KEY_DOWN:
-        m->direction = DOWN;
-        m->action = Astronaut_movement;
-        break;
-    case KEY_UP:
-        m->direction = UP;
-        m->action = Astronaut_movement;
-        break;
-    case KEY_SPACE:
-        m->action = Astronaut_zap;
-        break;
-    case KEY_q:
-    case KEY_Q:
-        m->action = Astronaut_disconnect;
-        break;
-    default:
-        return 0;
-        break;
-    }
-    return 1;
 }

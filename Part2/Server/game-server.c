@@ -63,7 +63,6 @@ void run_game()
     initialize_connection_server(&context, &responder, &publisher);
 
     initialize_ncurses();
-
     initialize_window(&space, &score_board, &numbers);
 
     // Connections to allow threads to end the game
@@ -264,7 +263,7 @@ void *keyboard_handler(void *requester)
 }
 
 /**
- * @brief Refresh the game window every 300ms. Keeps the getch from the keyboard_handler thread
+ * @brief Refresh the game window every 50ms. Keeps the getch from the keyboard_handler thread
  * from erasing the game window.
  *
  * @param args Contains the game window, the score board window, the numbers window and the game end flag.
@@ -292,7 +291,7 @@ void *thread_refresh(void *args)
         refresh_windows(space, score_board, numbers);
         pthread_mutex_unlock(&lock_space);
 
-        usleep(300);
+        usleep(50000);
     }
     free(args);
     pthread_exit(NULL);

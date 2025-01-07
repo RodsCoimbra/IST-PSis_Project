@@ -30,4 +30,6 @@ int cmp_position(position_info_t , position_info_t );
 
 void refresh_windows(WINDOW *, WINDOW *, WINDOW *);
 
+int execute_action(remote_char_t *);
+
 #endif

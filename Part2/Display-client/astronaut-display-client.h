@@ -8,7 +8,4 @@
 #include "outer-space-display.h"
 #include "astronaut-client.h"
 
-// TODO Isto é inutil???? Precisamos sequer de um .h??
-void *disconnect_server(void *);
-
 #endif
