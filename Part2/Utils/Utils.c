@@ -10,7 +10,7 @@ void initialize_ncurses()
     keypad(stdscr, TRUE); /* We get F1, F2 etc..		*/
     noecho();             /* Don't echo() while we do getch */
     curs_set(0);          /* Do not display the cursor */
-    refresh();            
+    refresh();
 }
 
 /**
@@ -18,6 +18,7 @@ void initialize_ncurses()
  *
  * @param space Pointer to the game window
  * @param score_board Pointer to the score board window
+ * @param numbers Pointer to the numbers window
  */
 void initialize_window(WINDOW **space, WINDOW **score_board, WINDOW **numbers)
 {
@@ -87,7 +88,6 @@ void update_window_char(WINDOW *space, position_info_t update_position, char c)
  *
  * @param space WINDOW pointer to the game window
  * @param all_ships all_ships_t struct with the data from all ships and aliens
- * @param score_board WINDOW pointer to the score board window
  */
 void end_game_display(WINDOW *space, all_ships_t all_ships)
 {
@@ -226,12 +226,11 @@ void refresh_windows(WINDOW *space, WINDOW *score_board, WINDOW *numbers)
     wrefresh(numbers);
 }
 
-
 /**
  * @brief Receives the key pressed by the user and sets the action of the astronaut.
- * 
+ *
  * @param m Holds the astronaut message for the server.
- * 
+ *
  * @return Returns 1 if the key pressed is valid, 0 otherwise.
  */
 int execute_action(remote_char_t *m)

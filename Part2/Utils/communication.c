@@ -40,7 +40,6 @@ void initialize_connection_client(void **context, void **requester)
  *
  * @param context Pointer to the zmq context
  * @param subscriber Pointer to the zmq subscriber socket
- * @param topic Topic to subscribe
  */
 void initialize_connection_sub(void **context, void **subscriber)
 {
@@ -86,6 +85,7 @@ void recv_TCP(void *responder, remote_char_t *m)
  *
  * @param subscriber Pointer to the zmq subscriber socket
  * @param all_data all ships data
+ * @param game_end Pointer to the game end flag
  */
 void recv_subscription_TCP(void *subscriber, all_ships_t *all_data, long int *game_end)
 {
