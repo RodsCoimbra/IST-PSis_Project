@@ -37,6 +37,9 @@ int main()
     display(&disconnect, subscriber);
 
     pthread_join(joystick_thread, &msg);
+
+    sleep(5);
+
     endwin();
 
     printf("Disconnected ship %c\n", ((remote_char_t *)msg)->ship);
